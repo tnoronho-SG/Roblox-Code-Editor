@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roblox Lua Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark">⌘</div><div><strong>Roblox Lua Builder</strong><span>visual scripting studio</span></div></div>
+      <div class="project-name"><span class="status-dot"></span><span id="projectTitle">Untitled Script</span><button class="icon-btn" title="Renomear projeto" id="renameProject">✎</button></div>
+      <div class="top-actions"><button class="ghost-btn" id="undoBtn" title="Undo (Ctrl+Z)">↶</button><button class="ghost-btn" id="redoBtn" title="Redo (Ctrl+Y)">↷</button><span class="divider"></span><button class="secondary-btn" id="themeBtn" title="Alternar tema">☾</button><button class="secondary-btn" id="languageBtn">PT</button><button class="secondary-btn" id="clearBtn">Clear</button><button class="secondary-btn" id="typingHubBtn">Pop Hub</button><button class="primary-btn" id="runBtn"><span>▶</span> Run script</button><div class="avatar">RL</div></div>
+    </header>
+    <main class="workspace-layout">
+      <aside class="sidebar library-panel">
+        <div class="panel-heading"><div><span class="eyebrow">BUILD / 01</span><h2>Biblioteca</h2></div><button class="icon-btn" title="Buscar blocos">⌕</button></div>
+        <div class="search-wrap"><span>⌕</span><input id="blockSearch" placeholder="Buscar blocos..." /></div>
+        <div id="categoryTabs" class="category-tabs"></div>
+        <div class="library-list" id="libraryList"></div>
+        <div class="library-foot"><span class="mini-help">Arraste um bloco para o canvas</span><span class="kbd">⌘ K</span></div>
+      </aside>
+      <section class="editor-column">
+        <div class="editor-toolbar"><div class="breadcrumb"><span>Workspace</span><b>/</b><strong>Script principal</strong></div><div class="toolbar-actions"><button class="tool-btn active" id="selectTool" title="Selecionar">↖</button><button class="tool-btn" id="handTool" title="Mover canvas">✋</button><button class="tool-btn" id="duplicateBtn" title="Duplicar bloco">⧉</button><button class="tool-btn code-toggle active" id="inlineCodeBtn" title="Mostrar código ao lado dos blocos">Lua</button><span class="divider"></span><button class="tool-btn" id="zoomOut" title="Diminuir zoom">−</button><span id="zoomValue">100%</span><button class="tool-btn" id="zoomIn" title="Aumentar zoom">+</button><button class="tool-btn" id="gridToggle" title="Alternar grid">▦</button></div></div>
+        <div class="canvas" id="canvas"><div class="canvas-inner" id="canvasInner"><div class="canvas-label"><span class="canvas-pulse"></span> SCRIPT PRINCIPAL <span class="canvas-hint">solte blocos aqui</span></div><div id="treeRoot" class="tree-root"></div><div id="dropHint" class="drop-hint"><div class="drop-icon">↓</div><strong>Comece pelo evento</strong><span>Arraste qualquer bloco da biblioteca para cá</span></div></div></div>
+        <div class="bottom-status"><span><i class="live-dot"></i> Autosave ativo</span><span id="blockCount">0 blocos</span><span class="status-spacer"></span><span>Grid 16px</span><span>Zoom <b id="statusZoom">100%</b></span></div>
+      </section>
+      <aside class="right-panel">
+        <div class="code-panel">
+          <div class="panel-heading code-heading"><div><span class="eyebrow">OUTPUT / LUau</span><h2>Código gerado</h2></div><button class="copy-btn" id="copyBtn">▣ Copiar</button></div>
+          <div class="code-meta"><span class="file-pill">◈ Script.lua</span><span class="valid-state" id="validState"><i></i> válido</span></div>
+          <pre class="code-window" id="codeOutput"><code></code></pre>
+          <div class="code-foot"><span>Gerador determinístico</span><span id="lineCount">0 linhas</span></div>
+        </div>
+        <div class="inspector-panel"><div class="panel-heading"><div><span class="eyebrow">PROPERTIES / BLOCK</span><h2>Inspector</h2></div><button class="icon-btn" title="Fechar inspector">×</button></div><div id="inspectorContent" class="inspector-content"><div class="empty-inspector"><div>◌</div><strong>Selecione um bloco</strong><span>As propriedades aparecerão aqui</span></div></div></div>
+        <div class="errors-panel" id="errorsPanel"><div class="error-heading"><span>✓</span><strong>Sem erros de validação</strong></div></div>
+      </aside>
+    </main>
+  </div>
+  <div class="toast" id="toast"></div>
+  <div class="typing-hub hidden" id="typingHub" aria-hidden="true">
+    <div class="typing-panel">
+      <div class="typing-header">
+        <div>
+          <span class="eyebrow">POP HUB / TYPING</span>
+          <h3>Typing Rush</h3>
+        </div>
+        <button class="icon-btn" id="closeTypingHub" title="Fechar">×</button>
+      </div>
+
+      <div class="typing-stats">
+        <div class="typing-stat">
+          <span>Score</span>
+          <strong id="typingScore">0</strong>
+        </div>
+        <div class="typing-stat">
+          <span>Velocidade</span>
+          <strong id="typingSpeed">0 WPM</strong>
+        </div>
+        <div class="typing-stat">
+          <span>Acertos</span>
+          <strong id="typingAccuracy">100%</strong>
+        </div>
+      </div>
+
+      <div class="typing-prompt" id="typingPrompt"></div>
+      <input id="typingInput" type="text" spellcheck="false" autocomplete="off" placeholder="Digite o código e mantenha o ritmo..." />
+
+      <div class="typing-actions">
+        <button class="primary-btn" id="startTypingBtn">Iniciar desafio</button>
+        <button class="secondary-btn" id="resetTypingBtn">Reiniciar</button>
+      </div>
+
+      <div class="typing-status" id="typingStatus">Pronto para começar. Clique em iniciar.</div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
