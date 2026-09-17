@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=20260914-code-window-fixed-2" />
 </head>
 <body>
   <div class="app-shell">
@@ -67,8 +67,20 @@
         </div>
       </div>
 
+      <div class="typing-audio-controls" aria-label="Controles de volume">
+        <button class="audio-btn" id="muteTypingBtn" type="button" title="Ativar/Desativar som">🔊</button>
+        <button class="audio-btn" id="volumeDownBtn" type="button" title="Diminuir volume">−</button>
+        <span class="audio-volume" id="typingVolumeValue">70%</span>
+        <button class="audio-btn" id="volumeUpBtn" type="button" title="Aumentar volume">＋</button>
+      </div>
+
+      <div class="typing-target-wrap">
+        <label class="typing-target-label">Código a ser digitado</label>
+        <pre class="typing-target" id="typingTarget" aria-live="polite"></pre>
+      </div>
+
       <div class="typing-prompt" id="typingPrompt"></div>
-      <input id="typingInput" type="text" spellcheck="false" autocomplete="off" placeholder="Digite o código e mantenha o ritmo..." />
+      <textarea id="typingInput" rows="5" spellcheck="false" autocomplete="off" placeholder="Digite o código e mantenha o ritmo... (Enter e Tab funcionam)" aria-label="Área de digitação do minigame"></textarea>
 
       <div class="typing-actions">
         <button class="primary-btn" id="startTypingBtn">Iniciar desafio</button>
@@ -78,6 +90,6 @@
       <div class="typing-status" id="typingStatus">Pronto para começar. Clique em iniciar.</div>
     </div>
   </div>
-  <script src="app.js"></script>
+  <script src="app.js?v=20260911-roblox-library"></script>
 </body>
 </html>
