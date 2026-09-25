@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { BlockRegistry } from '../src/core/BlockRegistry.js';
 import { TypeSystem } from '../src/core/TypeSystem.js';
@@ -68,6 +69,40 @@ test('BlockRegistry registers blocks and exposes categories', () => {
   assert.ok(block);
   assert.equal(block.category, 'movement');
   assert.ok(BlockRegistry.listByCategory('movement').some(item => item.id === blockId));
+});
+
+test('Player category contains the requested Roblox player blocks', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const required = [
+    'players_service',
+    'local_player',
+    'players_get_players',
+    'players_get_player_from_character',
+    'players_get_player_by_user_id',
+    'players_player_added',
+    'players_player_removing',
+    'player_name',
+    'player_display_name',
+    'player_user_id',
+    'player_account_age',
+    'player_character',
+    'player_team',
+    'player_team_color',
+    'player_neutral',
+    'player_character_added',
+    'player_character_removing',
+    'player_load_character',
+    'player_kick',
+    'player_parent',
+    'get_character_from_player',
+    'get_player_from_character',
+    'get_player_by_user_id',
+    'for_each_player_in_players_get_players',
+  ];
+
+  required.forEach((key) => {
+    assert.match(source, new RegExp(`${key}:\\s*\\{`));
+  });
 });
 
 test('TypeSystem allows compatible assignments and rejects invalid ones', () => {
