@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+    paths:
+      - .github/workflows/pages.yml
+      - app.js
+      - index.html
+      - memes/**
+      - src/**
+      - styles.css
   workflow_dispatch:
 
 permissions:
