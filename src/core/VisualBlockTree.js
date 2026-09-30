@@ -19,22 +19,25 @@ export class VisualBlockTree {
     };
   }
 
-  static find(nodes, id) {
+  static find(nodes, id, parent = null) {
     for (const node of nodes || []) {
-      if (node.id === id) return { node, list: nodes, parent: null };
-      const nested = this.find(node.children, id);
-      if (nested) return { ...nested, parent: node };
-      const next = node.next ? this.find([node.next], id) : null;
-      if (next) return { ...next, parent: node };
+      if (node.id === id) return { node, list: nodes, parent };
+      const nested = this.find(node.children, id, node);
+      if (nested) return nested;
+      if (node.next) {
+        const next = this.find([node.next], id, node);
+        if (next) return next;
+      }
       for (const [propertyId, value] of Object.entries(node.properties || {})) {
         if (value && typeof value === 'object' && value.id) {
-          const found = this.find([value], id);
-          if (found) return { ...found, parent: node, propertyId };
+          if (value.id === id) return { node: value, list: [value], parent: node, propertyId };
+          const found = this.find([value], id, node);
+          if (found) return found;
         }
       }
       for (const body of Object.values(node.bodies || {})) {
-        const found = this.find(body, id);
-        if (found) return { ...found, parent: node };
+        const found = this.find(body, id, node);
+        if (found) return found;
       }
     }
     return null;
@@ -51,6 +54,42 @@ export class VisualBlockTree {
   static connectSequence(source, target) {
     source.next = target;
     return target;
+  }
+
+  static insertBefore(nodes, targetId, insertedNode) {
+    const target = this.find(nodes, targetId);
+    if (!target || target.node === insertedNode) return false;
+
+    if (target.parent?.next === target.node) {
+      let tail = insertedNode;
+      while (tail.next) tail = tail.next;
+      tail.next = target.node;
+      target.parent.next = insertedNode;
+      return true;
+    }
+
+    const index = target.list?.indexOf(target.node) ?? -1;
+    if (index < 0) return false;
+    target.list.splice(index, 0, insertedNode);
+    return true;
+  }
+
+  static insertAfter(nodes, targetId, insertedNode) {
+    const target = this.find(nodes, targetId);
+    if (!target || target.node === insertedNode) return false;
+
+    if (target.parent?.next === target.node) {
+      let tail = insertedNode;
+      while (tail.next) tail = tail.next;
+      tail.next = target.node.next;
+      target.node.next = insertedNode;
+      return true;
+    }
+
+    const index = target.list?.indexOf(target.node) ?? -1;
+    if (index < 0) return false;
+    target.list.splice(index + 1, 0, insertedNode);
+    return true;
   }
 
   static connectValue(node, inputId, valueNode) {
@@ -73,9 +112,7 @@ export class VisualBlockTree {
     } else if (list) {
       const index = list.indexOf(node);
       if (index !== -1) {
-        if (node.next) list.splice(index, 1, node.next);
-        else list.splice(index, 1);
-        node.next = null;
+        list.splice(index, 1);
       }
     }
 

@@ -24,6 +24,8 @@
     .dark-theme .block .socket { border-color: #f8f8f2; background: rgba(40,42,54,.82); color: #f8f8f2; }
     .dark-theme .block .socket::before { background: #f1fa8c; color: #282a36; }
     .dark-theme .block .socket.socket-target { border-color: #f1fa8c; background: #f1fa8c !important; color: #282a36 !important; box-shadow: 0 0 0 3px rgba(241,250,140,.35), 0 0 12px rgba(241,250,140,.45); }
+    .block.drop-before { box-shadow: inset 0 4px #fef08a, 0 0 0 2px rgba(254,240,138,.6); }
+    .block.drop-after { box-shadow: inset 0 -4px #fef08a, 0 0 0 2px rgba(254,240,138,.6); }
   </style>
 </head>
 <body>
@@ -31,7 +33,7 @@
     <header class="topbar">
       <div class="brand"><div class="brand-mark">⌘</div><div><strong>Roblox Lua Builder</strong><span>visual scripting studio</span></div></div>
       <div class="project-name"><span class="status-dot"></span><span id="projectTitle">Untitled Script</span><button class="icon-btn" title="Renomear projeto" id="renameProject">✎</button></div>
-      <div class="top-actions"><button class="ghost-btn" id="undoBtn" title="Undo (Ctrl+Z)">↶</button><button class="ghost-btn" id="redoBtn" title="Redo (Ctrl+Y)">↷</button><span class="divider"></span><button class="secondary-btn" id="themeBtn" title="Alternar tema">☾</button><button class="secondary-btn" id="languageBtn">PT</button><button class="secondary-btn" id="clearBtn">Clear</button><button class="secondary-btn" id="typingHubBtn">Pop Hub</button><button class="primary-btn" id="runBtn"><span>▶</span> Run script</button><div class="avatar">RL</div></div>
+      <div class="top-actions"><button class="ghost-btn" id="undoBtn" title="Undo (Ctrl+Z)">↶</button><button class="ghost-btn" id="redoBtn" title="Redo (Ctrl+Y)">↷</button><span class="divider"></span><button class="secondary-btn" id="saveCodeBtn" title="Salvar código e blocos" aria-label="Salvar código e blocos">↓</button><button class="secondary-btn" id="loadCodeBtn" title="Carregar código e blocos" aria-label="Carregar código e blocos">↑</button><input id="loadCodeInput" type="file" accept=".lua,.luau,.txt" hidden /><button class="secondary-btn" id="themeBtn" title="Alternar tema">☾</button><button class="secondary-btn" id="languageBtn">PT</button><button class="secondary-btn" id="clearBtn">Clear</button><button class="secondary-btn" id="typingHubBtn">Pop Hub</button><button class="primary-btn" id="runBtn"><span>▶</span> Run script</button><div class="avatar">RL</div></div>
     </header>
     <main class="workspace-layout">
       <aside class="sidebar library-panel">
@@ -107,6 +109,6 @@
       <div class="typing-status" id="typingStatus">Pronto para começar. Clique em iniciar.</div>
     </div>
   </div>
-  <script type="module" src="app.js?v=20260930-text-value-inline-2"></script>
+  <script type="module" src="app.js?v=20260930-literal-input-fix-12"></script>
 </body>
 </html>

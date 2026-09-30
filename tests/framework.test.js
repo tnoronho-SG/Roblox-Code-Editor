@@ -56,6 +56,8 @@ import { normalizeVisualDefinition, VISUAL_BLOCK_KINDS, VISUAL_TYPES } from '../
 import { VisualTypeSystem } from '../src/core/VisualTypeSystem.js';
 import { VisualConnectionSystem } from '../src/core/VisualConnectionSystem.js';
 import { VisualBlockTree } from '../src/core/VisualBlockTree.js';
+import { appendVisualProjectMetadata, normalizeVisualProjectTree, readVisualProjectMetadata } from '../src/core/VisualProjectFile.js';
+import { serializeLuauExpression } from '../src/core/LuauExpressionSerializer.js';
 
 test('BlockRegistry registers blocks and exposes categories', () => {
   const blockId = 'test_move_object_by';
@@ -123,6 +125,118 @@ test('Variable assignment blocks expose sockets for connected values', () => {
     assert.ok(definition, `Missing ${key} definition`);
     assert.match(definition, new RegExp(`kind:'VALUE',output:'${output}'`));
   });
+});
+
+test('Activated event block connects an object and provides an event body', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const definition = source.split('\n').find(line => line.startsWith('  when_object_activated:'));
+
+  assert.ok(definition);
+  assert.match(definition, /\{object\}\.Activated:Connect\(function\(\)/);
+  assert.match(definition, /object:\['Object','object','socket'\]/);
+  assert.match(definition, /children:true/);
+});
+
+test('Object reference block outputs a plain object expression', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const definition = source.split('\n').find(line => line.startsWith('  object_reference:'));
+  const objectReference = normalizeVisualDefinition('object_reference', {
+    type: 'objects',
+    kind: 'VALUE',
+    output: VISUAL_TYPES.OBJECT,
+  });
+  const objectInput = normalizeVisualDefinition('object_name', {
+    type: 'objects',
+    propsMeta: { object: ['Object', 'object', 'socket'] },
+  }).inputs[0];
+
+  assert.ok(definition);
+  assert.match(definition, /template:'\{object\}'/);
+  assert.doesNotMatch(definition, /\.Name|\.Parent|\.ClassName/);
+  assert.equal(VisualConnectionSystem.canConnectValue(objectReference, objectInput), true);
+});
+
+test('Debug category provides a Print command with a value socket', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const definition = source.split('\n').find(line => line.startsWith('  print_block:'));
+  const printBlock = normalizeVisualDefinition('print_block', {
+    type: 'debug',
+    propsMeta: { value: ['Value', 'text', 'socket'] },
+  });
+
+  assert.match(source, /debug:\{label:'Debug'/);
+  assert.match(source, /debug:'Depuração'/);
+  assert.ok(definition);
+  assert.match(definition, /template:'print\(\{value\}\)'/);
+  assert.equal(printBlock.kind, 'COMMAND');
+  assert.equal(printBlock.inputs[0].id, 'value');
+});
+
+test('Edited text and number literal values serialize into connected code', () => {
+  const definitions = {
+    set_variable: { template: '{name} = {value}', props: { name: 'coins', value: '0' } },
+    text_value: { template: '{value}', props: { value: 'text' }, output: 'TEXT' },
+    number_value: { template: '{value}', props: { value: '0' }, output: 'NUMBER' },
+  };
+  const normalizeOperator = value => String(value ?? '');
+  const textAssignment = {
+    type: 'set_variable',
+    properties: { name: 'message', value: { type: 'text_value', properties: { value: 'updated text' } } },
+  };
+  const numberAssignment = {
+    type: 'set_variable',
+    properties: { name: 'score', value: { type: 'number_value', properties: { value: '42' } } },
+  };
+
+  assert.equal(serializeLuauExpression(textAssignment, definitions, normalizeOperator), 'message = "updated text"');
+  assert.equal(serializeLuauExpression(numberAssignment, definitions, normalizeOperator), 'score = 42');
+});
+
+test('Block markup uses valid block containers for sockets with nested blocks', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+
+  assert.match(source, /return`<div class="socket /);
+  assert.match(source, /<div class="block-label">\$\{labelMarkup\}<\/div>/);
+});
+
+test('Object reference updates the enclosing Activated event Luau', () => {
+  const definitions = {
+    object_reference: { template: '{object}', props: { object: 'workspace' }, output: 'OBJECT' },
+    when_object_activated: { template: '{object}.Activated:Connect(function()' },
+  };
+  const event = {
+    type: 'when_object_activated',
+    properties: {
+      object: {
+        type: 'object_reference',
+        properties: { object: 'sword' },
+      },
+    },
+  };
+
+  assert.equal(serializeLuauExpression(event, definitions, value => String(value ?? '')), 'sword.Activated:Connect(function()');
+});
+
+test('Visual project files keep Luau and recover the block tree', () => {
+  const tree = [{ id: 'root-1', type: 'set_variable', properties: { name: 'part', value: { id: 'value-1', type: 'object_name', properties: { object: 'workspace' } } } }];
+  const source = 'part = workspace.Name';
+  const file = appendVisualProjectMetadata(source, tree, 'Projeto: Ação');
+  const loaded = readVisualProjectMetadata(file);
+
+  assert.ok(file.startsWith(source));
+  assert.match(file, /--\[\[/);
+  assert.equal(loaded.code, source);
+  assert.equal(loaded.title, 'Projeto: Ação');
+  assert.deepEqual(loaded.tree, tree);
+  assert.equal(readVisualProjectMetadata(source), null);
+
+  const [restored] = normalizeVisualProjectTree(loaded.tree, {
+    set_variable: {},
+    object_name: {},
+  });
+  assert.equal(restored.properties.value.type, 'object_name');
+  assert.equal(restored.inputs.value, restored.properties.value);
+  assert.equal(restored.children, restored.bodies.body);
 });
 
 test('TypeSystem allows compatible assignments and rejects invalid ones', () => {
@@ -637,4 +751,49 @@ test('Visual block tree detaches a value without removing its parent block', () 
   assert.equal(VisualBlockTree.detach([command], expression.id), expression);
   assert.equal(command.properties.amount, undefined);
   assert.equal(VisualBlockTree.find([command], expression.id), null);
+});
+
+test('Visual block tree inserts moved blocks before and after without losing siblings', () => {
+  const definition = normalizeVisualDefinition('command', { type: 'movement' });
+  const first = VisualBlockTree.createNode(definition);
+  const second = VisualBlockTree.createNode(definition);
+  const third = VisualBlockTree.createNode(definition);
+  const root = [first, second, third];
+
+  const movedBefore = VisualBlockTree.detach(root, third.id);
+  assert.equal(VisualBlockTree.insertBefore(root, second.id, movedBefore), true);
+  assert.deepEqual(root.map(node => node.id), [first.id, third.id, second.id]);
+  assert.equal(VisualBlockTree.insertAfter(root, first.id, VisualBlockTree.detach(root, second.id)), true);
+  assert.deepEqual(root.map(node => node.id), [first.id, second.id, third.id]);
+});
+
+test('Visual block tree inserts in linked sequences without dropping the tail', () => {
+  const definition = normalizeVisualDefinition('command', { type: 'movement' });
+  const first = VisualBlockTree.createNode(definition);
+  const second = VisualBlockTree.createNode(definition);
+  const third = VisualBlockTree.createNode(definition);
+  VisualBlockTree.connectSequence(first, second);
+  VisualBlockTree.connectSequence(second, third);
+
+  const moved = VisualBlockTree.detach([first], third.id);
+  assert.equal(VisualBlockTree.insertBefore([first], second.id, moved), true);
+  assert.equal(first.next, third);
+  assert.equal(third.next, second);
+  assert.equal(second.next, null);
+});
+
+test('Visual block tree detaches one linked block without duplicating its tail', () => {
+  const definition = normalizeVisualDefinition('command', { type: 'movement' });
+  const first = VisualBlockTree.createNode(definition);
+  const middle = VisualBlockTree.createNode(definition);
+  const last = VisualBlockTree.createNode(definition);
+  VisualBlockTree.connectSequence(first, middle);
+  VisualBlockTree.connectSequence(middle, last);
+
+  const moved = VisualBlockTree.detach([first], middle.id);
+  assert.equal(first.next, last);
+  assert.equal(moved.next, null);
+  assert.equal(VisualBlockTree.insertBefore([first], first.id, moved), true);
+  assert.deepEqual([moved.id, first.id, first.next.id], [middle.id, first.id, last.id]);
+  assert.equal(VisualBlockTree.count([moved, first]), 3);
 });
