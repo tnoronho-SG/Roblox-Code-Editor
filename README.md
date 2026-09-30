@@ -2,6 +2,10 @@
 
 Este projeto estabelece a base de uma arquitetura profissional para um editor visual de programação para Roblox, inspirado em Scratch, com produção de Luau.
 
+## Editor online
+
+Acesse o editor publicado no [GitHub Pages](https://tnoronho-sg.github.io/Roblox-Code-Editor/).
+
 ## Visão geral
 
 A biblioteca foi estruturada em fases, começando pela Fase 1:
