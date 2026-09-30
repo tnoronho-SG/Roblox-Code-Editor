@@ -8,6 +8,23 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=20260914-code-window-fixed-2" />
+  <style>
+    .canvas { overflow: auto; }
+    .inspector-summary { margin: 14px 0; color: #526071; font-size: 12px; line-height: 1.5; }
+    .inspector-preview { padding: 10px; border: 1px solid #dce2e9; border-radius: 6px; background: #f4f6f8; }
+    .inspector-preview > span { color: #718092; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .inspector-preview pre { overflow: auto; margin: 8px 0 0; padding: 10px; border-radius: 4px; background: #101722; color: #d6deeb; font: 11px/1.5 monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .dark-theme .inspector-summary { color: #bdc7d6; }
+    .dark-theme .inspector-preview { border-color: #3b4552; background: #222a35; }
+    .block .socket { display: inline-flex; align-items: center; justify-content: flex-start; gap: 5px; min-width: 72px; min-height: 25px; max-width: none; padding: 3px 7px; border: 2px dashed rgba(255,255,255,.9); border-radius: 5px; background: rgba(15,23,42,.22); color: #fff; font-size: 11px; font-weight: 700; box-shadow: inset 0 0 0 1px rgba(15,23,42,.18); transition: background .12s ease, border-color .12s ease, box-shadow .12s ease; }
+    .block .socket::before { content: '+'; display: inline-grid; place-items: center; flex: 0 0 15px; height: 15px; border-radius: 3px; background: #fff; color: #126e65; font-size: 13px; font-weight: 800; line-height: 1; }
+    .block .socket.socket-filled { min-height: 0; padding: 2px 3px; border-style: solid; border-width: 1px; background: rgba(15,23,42,.14); }
+    .block .socket.socket-filled::before { content: none; }
+    .block .socket.socket-target { border-style: solid; border-color: #fef08a; background: #fff !important; color: #17212d !important; box-shadow: 0 0 0 3px rgba(254,240,138,.48), 0 0 12px rgba(255,255,255,.6); }
+    .dark-theme .block .socket { border-color: #f8f8f2; background: rgba(40,42,54,.82); color: #f8f8f2; }
+    .dark-theme .block .socket::before { background: #f1fa8c; color: #282a36; }
+    .dark-theme .block .socket.socket-target { border-color: #f1fa8c; background: #f1fa8c !important; color: #282a36 !important; box-shadow: 0 0 0 3px rgba(241,250,140,.35), 0 0 12px rgba(241,250,140,.45); }
+  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -90,6 +107,6 @@
       <div class="typing-status" id="typingStatus">Pronto para começar. Clique em iniciar.</div>
     </div>
   </div>
-  <script src="app.js?v=20260911-roblox-library"></script>
+  <script type="module" src="app.js?v=20260930-text-value-inline-2"></script>
 </body>
 </html>

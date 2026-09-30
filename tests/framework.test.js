@@ -52,6 +52,10 @@ import { generateInputPressed } from '../src/generators/luau/input/inputPressed.
 import { generateTeleportTo } from '../src/generators/luau/teleport/teleportTo.js';
 import { generatePlaySound } from '../src/generators/luau/audio/playSound.js';
 import { generateSetScore } from '../src/generators/luau/variables/setScore.js';
+import { normalizeVisualDefinition, VISUAL_BLOCK_KINDS, VISUAL_TYPES } from '../src/core/VisualBlockDefinition.js';
+import { VisualTypeSystem } from '../src/core/VisualTypeSystem.js';
+import { VisualConnectionSystem } from '../src/core/VisualConnectionSystem.js';
+import { VisualBlockTree } from '../src/core/VisualBlockTree.js';
 
 test('BlockRegistry registers blocks and exposes categories', () => {
   const blockId = 'test_move_object_by';
@@ -102,6 +106,22 @@ test('Player category contains the requested Roblox player blocks', () => {
 
   required.forEach((key) => {
     assert.match(source, new RegExp(`${key}:\\s*\\{`));
+  });
+});
+
+test('Variable assignment blocks expose sockets for connected values', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+
+  ['set_variable', 'local_set_variable'].forEach((key) => {
+    const definition = source.split('\n').find(line => line.startsWith(`  ${key}:`));
+    assert.ok(definition, `Missing ${key} definition`);
+    assert.match(definition, /value:\['Value','any','socket'\]/);
+  });
+
+  [['text_value', 'TEXT'], ['number_value', 'NUMBER'], ['boolean_value', 'BOOLEAN']].forEach(([key, output]) => {
+    const definition = source.split('\n').find(line => line.startsWith(`  ${key}:`));
+    assert.ok(definition, `Missing ${key} definition`);
+    assert.match(definition, new RegExp(`kind:'VALUE',output:'${output}'`));
   });
 });
 
@@ -498,4 +518,123 @@ test('Phase 9 input and teleport blocks generate valid Luau', () => {
   assert.match(teleportCode, /player\.Character.*CFrame|Vector3\.new\(0, 5, 0\)/);
   assert.ok(BlockRegistry.get('input_pressed'));
   assert.ok(BlockRegistry.get('teleport_to'));
+});
+
+test('Visual definitions classify commands, expressions, structures and values', () => {
+  const command = normalizeVisualDefinition('move', {
+    type: 'movement',
+    label: 'Move',
+    propsMeta: { amount: ['Amount', 'number', 'socket'] },
+  });
+  const expression = normalizeVisualDefinition('greater_than', {
+    type: 'operators',
+    label: 'Greater than',
+    output: VISUAL_TYPES.BOOLEAN,
+  });
+  const structure = normalizeVisualDefinition('repeat', {
+    type: 'control',
+    label: 'Repeat',
+    children: true,
+  });
+  const value = normalizeVisualDefinition('player', {
+    type: 'players',
+    label: 'Player',
+    output: VISUAL_TYPES.PLAYER,
+  });
+  const legacyComparison = normalizeVisualDefinition('comparison_block', {
+    type: 'operators',
+    label: 'Comparison',
+  });
+  const propertySetter = normalizeVisualDefinition('set_property', { type: 'objects' });
+  const playerKick = normalizeVisualDefinition('player_kick', { type: 'players' });
+  const objectValue = normalizeVisualDefinition('object_name', { type: 'objects' });
+
+  assert.equal(command.kind, VISUAL_BLOCK_KINDS.COMMAND);
+  assert.equal(expression.kind, VISUAL_BLOCK_KINDS.EXPRESSION);
+  assert.equal(structure.kind, VISUAL_BLOCK_KINDS.STRUCTURE);
+  assert.equal(value.kind, VISUAL_BLOCK_KINDS.VALUE);
+  assert.equal(propertySetter.kind, VISUAL_BLOCK_KINDS.COMMAND);
+  assert.equal(playerKick.kind, VISUAL_BLOCK_KINDS.COMMAND);
+  assert.equal(objectValue.kind, VISUAL_BLOCK_KINDS.VALUE);
+  assert.equal(legacyComparison.output, VISUAL_TYPES.BOOLEAN);
+  assert.deepEqual(structure.bodies, [{ id: 'body', accepts: VISUAL_BLOCK_KINDS.COMMAND }]);
+});
+
+test('Visual type and connection systems enforce compatible inputs', () => {
+  const numberCommand = normalizeVisualDefinition('move', {
+    type: 'movement',
+    propsMeta: { amount: ['Amount', 'number', 'socket'] },
+  });
+  const textValue = normalizeVisualDefinition('text', {
+    type: 'variables',
+    output: VISUAL_TYPES.TEXT,
+  });
+  const numberExpression = normalizeVisualDefinition('sum', {
+    type: 'operators',
+    output: VISUAL_TYPES.NUMBER,
+  });
+  const objectValue = normalizeVisualDefinition('object_name', {
+    type: 'objects',
+  });
+  const variableValueInput = normalizeVisualDefinition('set_variable', {
+    type: 'variables',
+    propsMeta: { value: ['Value', 'any', 'socket'] },
+  }).inputs[0];
+  const literalValues = [
+    normalizeVisualDefinition('text_value', { type: 'variables', kind: 'VALUE', output: VISUAL_TYPES.TEXT }),
+    normalizeVisualDefinition('number_value', { type: 'variables', kind: 'VALUE', output: VISUAL_TYPES.NUMBER }),
+    normalizeVisualDefinition('boolean_value', { type: 'variables', kind: 'VALUE', output: VISUAL_TYPES.BOOLEAN }),
+  ];
+  const literalOnlyCommand = normalizeVisualDefinition('literal_only', {
+    type: 'movement',
+    propsMeta: { amount: ['Amount', 'number'] },
+  });
+
+  assert.equal(VisualTypeSystem.isAssignable(VISUAL_TYPES.NUMBER, VISUAL_TYPES.TEXT), false);
+  assert.equal(VisualConnectionSystem.canConnectValue(textValue, numberCommand.inputs[0]), false);
+  assert.equal(VisualConnectionSystem.canConnectValue(numberExpression, numberCommand.inputs[0]), true);
+  assert.equal(VisualConnectionSystem.canConnectValue(objectValue, variableValueInput), true);
+  literalValues.forEach(value => assert.equal(VisualConnectionSystem.canConnectValue(value, variableValueInput), true));
+  assert.equal(VisualConnectionSystem.canConnectValue(numberExpression, literalOnlyCommand.inputs[0]), false);
+  assert.equal(VisualConnectionSystem.canConnectSequence(numberCommand, numberCommand), true);
+  assert.equal(VisualConnectionSystem.canConnectBody(numberCommand, { accepts: VISUAL_BLOCK_KINDS.COMMAND }), true);
+});
+
+test('Visual block tree represents sequence, value and nested body connections', () => {
+  const commandDefinition = normalizeVisualDefinition('move', { type: 'movement' });
+  const structureDefinition = normalizeVisualDefinition('repeat', { type: 'control', children: true });
+  const expressionDefinition = normalizeVisualDefinition('sum', { type: 'operators', output: VISUAL_TYPES.NUMBER });
+  const root = VisualBlockTree.createNode(structureDefinition);
+  const command = VisualBlockTree.createNode(commandDefinition);
+  const nextCommand = VisualBlockTree.createNode(commandDefinition);
+  const expression = VisualBlockTree.createNode(expressionDefinition);
+
+  VisualBlockTree.appendToBody(root, command);
+  VisualBlockTree.connectSequence(command, nextCommand);
+  VisualBlockTree.connectValue(command, 'amount', expression);
+
+  const found = VisualBlockTree.find([root], nextCommand.id);
+  assert.equal(found.node, nextCommand);
+  assert.equal(root.children[0], command);
+  assert.equal(command.next, nextCommand);
+  assert.equal(command.properties.amount, expression);
+  assert.equal(VisualBlockTree.count([root]), 4);
+});
+
+test('Visual block tree detaches a value without removing its parent block', () => {
+  const commandDefinition = normalizeVisualDefinition('move', {
+    type: 'movement',
+    propsMeta: { amount: ['Amount', 'number', 'socket'] },
+  });
+  const expressionDefinition = normalizeVisualDefinition('sum', {
+    type: 'math',
+    output: VISUAL_TYPES.NUMBER,
+  });
+  const command = VisualBlockTree.createNode(commandDefinition);
+  const expression = VisualBlockTree.createNode(expressionDefinition);
+  VisualBlockTree.connectValue(command, 'amount', expression);
+
+  assert.equal(VisualBlockTree.detach([command], expression.id), expression);
+  assert.equal(command.properties.amount, undefined);
+  assert.equal(VisualBlockTree.find([command], expression.id), null);
 });
