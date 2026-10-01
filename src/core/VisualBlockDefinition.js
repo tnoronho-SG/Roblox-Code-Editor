@@ -97,7 +97,8 @@ function kindForLegacyDefinition(id, definition) {
   return VISUAL_BLOCK_KINDS.COMMAND;
 }
 
-function visualTypeForMeta(meta = []) {
+function visualTypeForMeta(meta = [], inputId = '') {
+  if (String(meta[0] || '').trim().toLowerCase() === 'object' || inputId.toLowerCase() === 'object') return VISUAL_TYPES.OBJECT;
   const type = String(meta[1] || '').toLowerCase();
   if (type === 'number') return VISUAL_TYPES.NUMBER;
   if (type === 'boolean') return VISUAL_TYPES.BOOLEAN;
@@ -115,7 +116,7 @@ export function normalizeVisualDefinition(id, definition = {}) {
   const inputs = Object.entries(definition.propsMeta || {}).map(([inputId, meta]) => ({
     id: inputId,
     name: meta[0] || inputId,
-    type: visualTypeForMeta(meta),
+    type: visualTypeForMeta(meta, inputId),
     required: false,
     accepts: meta[2] === 'socket' ? ['VALUE', 'EXPRESSION'] : ['LITERAL'],
     default: definition.props?.[inputId],

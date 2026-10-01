@@ -186,13 +186,26 @@ test('Object reference block outputs a plain object expression', () => {
   });
   const objectInput = normalizeVisualDefinition('object_name', {
     type: 'objects',
-    propsMeta: { object: ['Object', 'object', 'socket'] },
+    propsMeta: { object: ['Object', 'text', 'socket'] },
   }).inputs[0];
 
   assert.ok(definition);
   assert.match(definition, /template:'\{object\}'/);
   assert.doesNotMatch(definition, /\.Name|\.Parent|\.ClassName/);
+  assert.equal(objectInput.type, VISUAL_TYPES.OBJECT);
   assert.equal(VisualConnectionSystem.canConnectValue(objectReference, objectInput), true);
+});
+
+test('Every block with an object placeholder declares a nestable object socket', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const objectBlocks = source.split('\n').filter(line =>
+    /^\s{2}[a-z0-9_]+:/.test(line) && /label:'[^']*\[(?:objeto|object)\]/i.test(line),
+  );
+
+  assert.ok(objectBlocks.length > 0);
+  objectBlocks.forEach(definition => {
+    assert.match(definition, /propsMeta:\{[^}]*object:\['Object','(?:text|object)','socket'\]/);
+  });
 });
 
 test('Debug category provides a Print command with a value socket', () => {
