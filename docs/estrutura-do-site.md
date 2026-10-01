@@ -10,13 +10,15 @@ Este documento descreve a aplicacao Roblox Lua Builder: o que aparece no editor,
 
 ## Visao geral
 
-O site e um editor visual de pagina unica. Ele e servido como arquivos estaticos e usa JavaScript ES modules e DOM nativo. O usuario organiza blocos, configura suas entradas e acompanha a geracao de codigo Luau. Nao ha roteador, API propria, banco de dados, autenticacao ou execucao remota de scripts.
+O site e um editor visual de pagina unica. A interface usa React, com componentes de classe para blocos com entradas e para o painel de codigo, e componentes funcionais para blocos sem entradas. O Express serve o HTML, os estilos, o bundle de navegador e os audios do Typing Rush. A arvore, o catalogo e os geradores continuam modulares em `src/`. Nao ha roteador, API de dominio, banco de dados, autenticacao ou execucao remota de scripts.
 
 ```mermaid
 flowchart LR
-    HTML[index.html: estrutura da pagina] --> APP[app.js: estado e interacoes]
-    APP --> CATALOG[Catalogo de blocos]
-    APP --> TREE[Arvore visual do projeto]
+    EXPRESS[server.js: servidor Express] --> HTML[index.html e bundle React]
+    HTML --> APP[app.js: estado e interacoes]
+    APP --> COMPONENTS[Componentes React]
+    COMPONENTS --> CATALOG[Catalogo de blocos]
+    COMPONENTS --> TREE[Arvore visual do projeto]
     TREE --> VALIDATE[Validacao]
     TREE --> GENERATE[Geracao Luau]
     GENERATE --> OUTPUT[Painel de codigo]
@@ -27,19 +29,19 @@ flowchart LR
 
 ## Executar e testar
 
-Requisitos: Node.js e Python 3 disponiveis no ambiente.
+Requisito: Node.js disponivel no ambiente.
 
 ```bash
 npm start
 ```
 
-O comando inicia `python3 -m http.server 3000`; abra `http://localhost:3000`.
+O Express compila `app.js` para `dist/app.js` ao iniciar e serve a aplicacao em `http://localhost:3000`.
 
 ```bash
 npm test
 ```
 
-Os comandos estao definidos em [package.json](../package.json). O projeto nao declara dependencias npm de runtime.
+Os comandos e dependencias estao definidos em [package.json](../package.json). React e React DOM compoem a interface; Express serve a aplicacao e esbuild gera o bundle do navegador.
 
 ## Mapa da interface
 

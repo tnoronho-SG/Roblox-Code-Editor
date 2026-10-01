@@ -22,6 +22,15 @@ A biblioteca foi estruturada em fases, começando pela Fase 1:
 
 Para o mapa completo da interface, do fluxo de dados e da estrutura atual do repositorio, consulte [Documentação do site](docs/estrutura-do-site.md). O manifesto estruturado para planejar a integracao MCP esta em [docs/mcp-site-map.json](docs/mcp-site-map.json).
 
+O editor usa React para renderizar cada bloco e o painel de código, mantendo a árvore visual, o catálogo e os geradores modulares em `src/`. O Express serve a aplicação e o bundle de navegador, compilado com esbuild.
+
+```bash
+npm install
+npm start
+```
+
+Abra `http://localhost:3000`. Execute `npm test` para validar os módulos de arquitetura e os componentes React.
+
 ## Estrutura
 
 ```text

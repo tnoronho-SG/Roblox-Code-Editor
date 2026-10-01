@@ -10,7 +10,7 @@
     "website_url": "https://tnoronho-sg.github.io/Roblox-Code-Editor/"
   },
   "current_architecture": {
-    "application_type": "static browser application using native ES modules and direct DOM rendering",
+    "application_type": "React single-page application served by Express",
     "route_model": "single page; no client-side router",
     "entrypoints": {
       "html": "index.html",
@@ -19,8 +19,12 @@
     },
     "runtime": {
       "package_type": "ES module",
+      "frontend_framework": "React",
+      "server_framework": "Express",
+      "client_bundle_tool": "esbuild",
       "start_command": "npm start",
-      "start_script": "python3 -m http.server 3000",
+      "start_script": "node server.js (builds dist/app.js before listening)",
+      "build_command": "npm run build",
       "test_command": "npm test",
       "test_script": "node --test",
       "backend_api": null,
@@ -200,7 +204,7 @@
       "index.html": "Page markup, editor panels, controls and typing hub.",
       "app.js": "Active UI controller, legacy block catalog, tree editing, validation, code generation, import/export and typing minigame.",
       "styles.css": "Application layout, editor/block styling, themes, responsive and minigame styles.",
-      "package.json": "Static server and Node test scripts; no MCP or runtime packages configured.",
+      "package.json": "Express start/build scripts and React runtime dependencies; Node test script.",
       "README.md": "Framework overview, setup notes and current published editor link.",
       "package-lock.json": "Locked npm metadata.",
       "memes/": "Local audio assets used by the typing minigame."

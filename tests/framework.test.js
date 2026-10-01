@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import React from 'react';
 import { readFileSync } from 'node:fs';
 
 import { BlockRegistry } from '../src/core/BlockRegistry.js';
@@ -58,6 +59,44 @@ import { VisualConnectionSystem } from '../src/core/VisualConnectionSystem.js';
 import { VisualBlockTree } from '../src/core/VisualBlockTree.js';
 import { appendVisualProjectMetadata, normalizeVisualProjectTree, readVisualProjectMetadata } from '../src/core/VisualProjectFile.js';
 import { serializeLuauExpression } from '../src/core/LuauExpressionSerializer.js';
+import { GeneratedCodeDisplay, InputBlock, InputFreeBlock, VisualBlockComponent } from '../src/ui/VisualBlockComponents.js';
+
+test('React block and output components follow the input-aware component contract', () => {
+  assert.ok(InputBlock.prototype instanceof React.Component);
+  assert.equal(typeof InputFreeBlock, 'function');
+  assert.ok(GeneratedCodeDisplay.prototype instanceof React.Component);
+  assert.equal(GeneratedCodeDisplay.getDerivedStateFromProps({ code: 'fresh' }, { code: 'old' }).code, 'fresh');
+  assert.equal(typeof VisualBlockComponent, 'function');
+});
+
+test('Editing a literal inside a nested value block updates generated Luau', () => {
+  const definitions = {
+    assignment: { template: '{value}', props: {} },
+    text_expression: { template: 'string.lower({value})', props: {} },
+    text_value: { template: '{value}', props: {}, output: 'TEXT' },
+  };
+  const literal = {
+    id: 'literal-1',
+    type: 'text_value',
+    properties: { value: 'before' },
+    inputs: { value: 'before' },
+  };
+  const expression = {
+    id: 'expression-1',
+    type: 'text_expression',
+    properties: { value: literal },
+    inputs: { value: literal },
+  };
+  const assignment = {
+    id: 'assignment-1',
+    type: 'assignment',
+    properties: { value: expression },
+    inputs: { value: expression },
+  };
+
+  assert.equal(VisualBlockTree.setProperty([assignment], literal.id, 'value', 'after'), true);
+  assert.equal(serializeLuauExpression(assignment, definitions, value => String(value ?? '')), 'string.lower("after")');
+});
 
 test('BlockRegistry registers blocks and exposes categories', () => {
   const blockId = 'test_move_object_by';
