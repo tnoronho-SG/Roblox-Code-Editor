@@ -28,7 +28,13 @@ export class VisualBlockTree {
         const next = this.find([node.next], id, node);
         if (next) return next;
       }
-      for (const [propertyId, value] of Object.entries(node.properties || {})) {
+
+      const connectedValues = {
+        ...(node.properties || {}),
+        ...(node.inputs || {}),
+      };
+
+      for (const [propertyId, value] of Object.entries(connectedValues)) {
         if (value && typeof value === 'object' && value.id) {
           if (value.id === id) return { node: value, list: [value], parent: node, propertyId };
           const found = this.find([value], id, node);
@@ -98,6 +104,14 @@ export class VisualBlockTree {
     return valueNode;
   }
 
+  static setProperty(nodes, nodeId, propertyId, value) {
+    const found = this.find(nodes, nodeId);
+    if (!found) return false;
+    found.node.properties[propertyId] = value;
+    found.node.inputs[propertyId] = value;
+    return true;
+  }
+
   static detach(nodes, id) {
     const found = this.find(nodes, id);
     if (!found) return null;
@@ -121,7 +135,10 @@ export class VisualBlockTree {
 
   static count(nodes) {
     return (nodes || []).reduce((count, node) => {
-      const values = Object.values(node.properties || {}).filter(value => value && typeof value === 'object' && value.id);
+      const values = Object.values({
+        ...(node.properties || {}),
+        ...(node.inputs || {}),
+      }).filter(value => value && typeof value === 'object' && value.id);
       return count + 1 + this.count(node.children) + this.count(node.next ? [node.next] : []) + this.count(values);
     }, 0);
   }

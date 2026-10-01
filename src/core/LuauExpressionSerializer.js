@@ -8,11 +8,11 @@ export function formatLuauValue(type, key, value, definitions, normalizeOperator
   if (value === undefined || value === null) {
     value = definitions[type]?.props?.[key] ?? 'nil';
   }
+  if (value && typeof value === 'object') return expressionCode(value);
   if (key === 'object' && definitions[type]?.output === 'OBJECT') {
     return String(value).trim() || 'nil';
   }
   if (key === 'value' && definitions[type]?.output === 'TEXT') return quoteLuauString(value);
-  if (value && typeof value === 'object') return expressionCode(value);
   if (value === 'any') return 'nil';
 
   if (typeof value === 'string') {

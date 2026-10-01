@@ -177,6 +177,7 @@ test('Edited text and number literal values serialize into connected code', () =
     set_variable: { template: '{name} = {value}', props: { name: 'coins', value: '0' } },
     text_value: { template: '{value}', props: { value: 'text' }, output: 'TEXT' },
     number_value: { template: '{value}', props: { value: '0' }, output: 'NUMBER' },
+    text_expression: { template: 'tostring({value})', props: { value: '' }, output: 'TEXT' },
   };
   const normalizeOperator = value => String(value ?? '');
   const textAssignment = {
@@ -187,9 +188,14 @@ test('Edited text and number literal values serialize into connected code', () =
     type: 'set_variable',
     properties: { name: 'score', value: { type: 'number_value', properties: { value: '42' } } },
   };
+  const nestedTextExpression = {
+    type: 'text_expression',
+    properties: { value: { type: 'text_value', properties: { value: 'updated text' } } },
+  };
 
   assert.equal(serializeLuauExpression(textAssignment, definitions, normalizeOperator), 'message = "updated text"');
   assert.equal(serializeLuauExpression(numberAssignment, definitions, normalizeOperator), 'score = 42');
+  assert.equal(serializeLuauExpression(nestedTextExpression, definitions, normalizeOperator), 'tostring("updated text")');
 });
 
 test('Block markup uses valid block containers for sockets with nested blocks', () => {
@@ -204,17 +210,22 @@ test('Object reference updates the enclosing Activated event Luau', () => {
     object_reference: { template: '{object}', props: { object: 'workspace' }, output: 'OBJECT' },
     when_object_activated: { template: '{object}.Activated:Connect(function()' },
   };
+  const objectReference = {
+    id: 'object-1',
+    type: 'object_reference',
+    properties: { object: 'workspace' },
+    inputs: { object: 'workspace' },
+  };
   const event = {
+    id: 'event-1',
     type: 'when_object_activated',
-    properties: {
-      object: {
-        type: 'object_reference',
-        properties: { object: 'sword' },
-      },
-    },
+    properties: { object: objectReference },
+    inputs: { object: objectReference },
   };
 
-  assert.equal(serializeLuauExpression(event, definitions, value => String(value ?? '')), 'sword.Activated:Connect(function()');
+  assert.equal(serializeLuauExpression(event, definitions, value => String(value ?? '')), 'workspace.Activated:Connect(function()');
+  assert.equal(VisualBlockTree.setProperty([event], 'object-1', 'object', 'workspace.OtherPart'), true);
+  assert.equal(serializeLuauExpression(event, definitions, value => String(value ?? '')), 'workspace.OtherPart.Activated:Connect(function()');
 });
 
 test('Visual project files keep Luau and recover the block tree', () => {
@@ -751,6 +762,28 @@ test('Visual block tree detaches a value without removing its parent block', () 
   assert.equal(VisualBlockTree.detach([command], expression.id), expression);
   assert.equal(command.properties.amount, undefined);
   assert.equal(VisualBlockTree.find([command], expression.id), null);
+});
+
+test('Visual block tree keeps nested value blocks discoverable when values are stored in inputs', () => {
+  const commandDefinition = normalizeVisualDefinition('move', {
+    type: 'movement',
+    propsMeta: { amount: ['Amount', 'number', 'socket'] },
+  });
+  const expressionDefinition = normalizeVisualDefinition('sum', {
+    type: 'math',
+    output: VISUAL_TYPES.NUMBER,
+  });
+
+  const command = VisualBlockTree.createNode(commandDefinition);
+  const expression = VisualBlockTree.createNode(expressionDefinition);
+  command.properties = {};
+  command.inputs.amount = expression;
+
+  const found = VisualBlockTree.find([command], expression.id);
+  assert.ok(found);
+  assert.equal(found.node, expression);
+  assert.equal(found.parent, command);
+  assert.equal(found.propertyId, 'amount');
 });
 
 test('Visual block tree inserts moved blocks before and after without losing siblings', () => {

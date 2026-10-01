@@ -1,0 +1,344 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "document_type": "website-to-mcp-architecture-map",
+  "document_version": 1,
+  "project": {
+    "name": "Roblox Lua Builder",
+    "repository_name": "roblox-blockly-framework",
+    "description": "Browser-based visual editor that builds Luau scripts from connected blocks.",
+    "language": "pt-BR",
+    "website_url": "https://tnoronho-sg.github.io/Roblox-Code-Editor/"
+  },
+  "current_architecture": {
+    "application_type": "static browser application using native ES modules and direct DOM rendering",
+    "route_model": "single page; no client-side router",
+    "entrypoints": {
+      "html": "index.html",
+      "javascript": "app.js",
+      "styles": "styles.css"
+    },
+    "runtime": {
+      "package_type": "ES module",
+      "start_command": "npm start",
+      "start_script": "python3 -m http.server 3000",
+      "test_command": "npm test",
+      "test_script": "node --test",
+      "backend_api": null,
+      "database": null,
+      "authentication": null,
+      "external_runtime_execution": false
+    },
+    "external_dependencies": [
+      {
+        "name": "Google Fonts",
+        "used_for": "DM Sans and Space Grotesk in the page head"
+      },
+      {
+        "name": "Giphy media URL",
+        "used_for": "decorative canvas background declared in styles.css"
+      }
+    ]
+  },
+  "site_map": [
+    {
+      "id": "topbar",
+      "source": "index.html",
+      "purpose": "Project identity and global actions",
+      "controls": [
+        "rename_project",
+        "undo",
+        "redo",
+        "save_project_file",
+        "load_project_file",
+        "toggle_theme",
+        "toggle_language",
+        "clear_project",
+        "open_typing_hub",
+        "validate_for_roblox_studio"
+      ]
+    },
+    {
+      "id": "block_library",
+      "source": "index.html and app.js",
+      "purpose": "Search and browse block definitions by category; drag blocks into the editor",
+      "controls": ["search_blocks", "filter_by_category", "drag_block"]
+    },
+    {
+      "id": "editor_workspace",
+      "source": "index.html and app.js",
+      "purpose": "Build the script as a tree of commands, structures and connected values",
+      "controls": [
+        "add_block",
+        "connect_value_block",
+        "nest_block_in_body",
+        "reorder_block",
+        "edit_block_input",
+        "select_block",
+        "delete_block",
+        "duplicate_block",
+        "pan_canvas",
+        "zoom_canvas",
+        "toggle_grid",
+        "toggle_inline_code"
+      ]
+    },
+    {
+      "id": "generated_code",
+      "source": "index.html and app.js",
+      "purpose": "Show deterministic Luau output and copy it to the clipboard",
+      "controls": ["copy_luau", "show_validation_state", "show_line_count"]
+    },
+    {
+      "id": "block_inspector",
+      "source": "index.html and app.js",
+      "purpose": "Edit selected block properties and show contextual summaries/previews"
+    },
+    {
+      "id": "validation_panel",
+      "source": "index.html and app.js",
+      "purpose": "Show validation status and up to three validation messages"
+    },
+    {
+      "id": "typing_rush_dialog",
+      "source": "index.html and app.js",
+      "purpose": "Typing minigame that uses generated code or meme text as the challenge",
+      "controls": ["start_challenge", "reset_challenge", "type_answer", "mute_audio", "adjust_volume", "close_dialog"],
+      "assets_directory": "memes/"
+    }
+  ],
+  "active_editor_data_flow": [
+    "Block definitions in app.js are normalized by src/core/VisualBlockDefinition.js.",
+    "The in-memory project tree is created, connected and searched through src/core/VisualBlockTree.js.",
+    "src/core/VisualConnectionSystem.js checks sequence, body and value connection compatibility.",
+    "Edits trigger validation and Luau generation in app.js; expression serialization uses src/core/LuauExpressionSerializer.js.",
+    "Saving downloads a .lua text file containing generated Luau plus a base64 JSON project marker; loading reads that marker and reconstructs the block tree.",
+    "The page does not autosave the project to browser storage or a server; the 'Autosave ativo' label is not backed by localStorage, sessionStorage or IndexedDB in the active code path.",
+    "The Run script button validates the project and displays a prompt to test it in Roblox Studio; it does not run Luau."
+  ],
+  "block_catalog": {
+    "source_of_truth_for_active_ui": "app.js: definitions, categories, categoryAliases, englishLabels, portugueseLabels and libraryOrder",
+    "normalization_module": "src/core/VisualBlockDefinition.js",
+    "normalization_function": "normalizeVisualCatalog",
+    "presentation_order": "libraryOrder (definition insertion order)",
+    "catalog_categories": [
+      "events",
+      "control",
+      "operators",
+      "variables",
+      "functions",
+      "players",
+      "character",
+      "objects",
+      "properties",
+      "methods",
+      "sound",
+      "world",
+      "input",
+      "multiplayer",
+      "admin",
+      "debug",
+      "teams",
+      "tools",
+      "datastore",
+      "services",
+      "advanced"
+    ],
+    "legacy_category_aliases": {
+      "logic": "operators",
+      "math": "operators",
+      "movement": "objects",
+      "appearance": "properties",
+      "audio": "sound",
+      "ui": "properties",
+      "teleport": "objects"
+    },
+    "definition_fields": [
+      "type",
+      "label",
+      "icon",
+      "template",
+      "props",
+      "propsMeta",
+      "operatorOptions",
+      "kind",
+      "output",
+      "children"
+    ],
+    "normalized_block_contract": {
+      "identity": ["id", "name", "kind", "category"],
+      "kinds": ["COMMAND", "VALUE", "STRUCTURE", "EXPRESSION"],
+      "inputs": ["id", "name", "type", "required", "accepts", "default"],
+      "outputs": "typed output for VALUE and EXPRESSION blocks",
+      "connections": "previous/next command connections",
+      "bodies": "named command bodies on STRUCTURE blocks",
+      "type_values": ["NUMBER", "TEXT", "BOOLEAN", "PLAYER", "OBJECT", "POSITION", "COLOR", "SOUND", "ANY"]
+    },
+    "inventory_note": "The active catalog is a private constant inside app.js and is not currently exposed to other modules or a server. MCP catalog operations need a shared exported catalog module or a maintained generated manifest; do not duplicate the entire catalog by hand."
+  },
+  "project_model": {
+    "tree_node": {
+      "fields": ["id", "type", "definitionId", "properties", "inputs", "next", "bodies", "children"],
+      "properties": "literal property values or nested connected value-block nodes",
+      "next": "next command in sequence",
+      "bodies": "map of body id to arrays of command nodes",
+      "children": "legacy alias for bodies.body"
+    },
+    "project_file": {
+      "extension": ".lua",
+      "metadata_module": "src/core/VisualProjectFile.js",
+      "marker": "ROBLOX_LUA_BUILDER_PROJECT_V1:",
+      "metadata_payload": {
+        "version": 1,
+        "title": "string",
+        "tree": "project tree node array"
+      },
+      "compatibility": "A plain Luau file without the marker can be generated/copied, but cannot restore visual blocks."
+    }
+  },
+  "source_tree": {
+    "root_files": {
+      "index.html": "Page markup, editor panels, controls and typing hub.",
+      "app.js": "Active UI controller, legacy block catalog, tree editing, validation, code generation, import/export and typing minigame.",
+      "styles.css": "Application layout, editor/block styling, themes, responsive and minigame styles.",
+      "package.json": "Static server and Node test scripts; no MCP or runtime packages configured.",
+      "README.md": "Framework overview, setup notes and current published editor link.",
+      "package-lock.json": "Locked npm metadata.",
+      "memes/": "Local audio assets used by the typing minigame."
+    },
+    "src/core/": {
+      "BlockRegistry.js": "Reusable registry API for block configs.",
+      "CodeBuilder.js": "Indent-aware Luau code construction helper.",
+      "ContextSystem.js": "Server/client/shared context compatibility.",
+      "LuauExpressionSerializer.js": "Format property values and serialize nested visual expressions.",
+      "ReferenceSystem.js": "Registry/resolution for Roblox references.",
+      "ScopeSystem.js": "Variable declaration and visibility by scope.",
+      "TypeSystem.js": "General assignment/type compatibility rules.",
+      "VisualBlockDefinition.js": "Legacy-to-visual block normalization and visual type/kind definitions.",
+      "VisualBlockTree.js": "Create, find, connect, insert, detach and count tree nodes.",
+      "VisualConnectionSystem.js": "Validate command sequences, value connections and bodies.",
+      "VisualProjectFile.js": "Encode/decode project metadata and normalize loaded trees.",
+      "VisualTypeSystem.js": "Visual type compatibility and output type rules."
+    },
+    "src/blocks/": {
+      "appearance/": ["setColor.js"],
+      "audio/": ["playSound.js"],
+      "character/": ["jumpCharacter.js", "setWalkSpeed.js"],
+      "control/": ["if.js", "wait.js", "while.js"],
+      "events/": ["playerJoined.js"],
+      "input/": ["inputPressed.js"],
+      "logic/": ["and.js", "boolean.js", "comparison.js", "not.js", "or.js"],
+      "math/": ["arithmetic.js"],
+      "movement/": ["moveObjectBy.js", "movePartBy.js"],
+      "objects/": ["setProperty.js"],
+      "teleport/": ["teleportTo.js"],
+      "ui/": ["showText.js"],
+      "variables/": ["setScore.js", "setVariable.js"]
+    },
+    "src/generators/luau/": {
+      "appearance/": ["setColor.js"],
+      "audio/": ["playSound.js"],
+      "character/": ["jumpCharacter.js", "setWalkSpeed.js"],
+      "control/": ["if.js", "wait.js", "while.js"],
+      "events/": ["playerJoined.js"],
+      "input/": ["inputPressed.js"],
+      "logic/": ["and.js", "boolean.js", "comparison.js", "not.js", "or.js"],
+      "math/": ["arithmetic.js"],
+      "movement/": ["moveObjectBy.js", "movePartBy.js"],
+      "objects/": ["setProperty.js"],
+      "teleport/": ["teleportTo.js"],
+      "ui/": ["showText.js"],
+      "variables/": ["setScore.js", "setVariable.js"]
+    },
+    "tests/": {
+      "framework.test.js": "Node test suite for core framework contracts, modular blocks/generators and selected active UI catalog/project behaviors."
+    }
+  },
+  "framework_boundary": {
+    "currently_imported_by_app_js": [
+      "normalizeVisualCatalog from src/core/VisualBlockDefinition.js",
+      "VisualConnectionSystem from src/core/VisualConnectionSystem.js",
+      "VisualBlockTree from src/core/VisualBlockTree.js",
+      "appendVisualProjectMetadata, normalizeVisualProjectTree and readVisualProjectMetadata from src/core/VisualProjectFile.js",
+      "formatLuauValue and serializeLuauExpression from src/core/LuauExpressionSerializer.js"
+    ],
+    "framework_modules_not_imported_by_active_app_js": [
+      "BlockRegistry",
+      "CodeBuilder",
+      "ContextSystem",
+      "ReferenceSystem",
+      "ScopeSystem",
+      "TypeSystem",
+      "VisualTypeSystem"
+    ],
+    "note": "The modular src/blocks and src/generators/luau implementations are tested framework building blocks. The active editor still generates from definitions/templates in app.js; the two catalogs/generation paths are not yet unified."
+  },
+  "mcp_design": {
+    "integration_style": "Separate stateless MCP server importing shared domain modules; do not import app.js because it binds directly to browser DOM globals.",
+    "initial_resources": [
+      {
+        "uri": "roblox-builder://site-map",
+        "backing_file": "docs/mcp-site-map.json",
+        "description": "This site, source tree, feature and integration map."
+      },
+      {
+        "uri": "roblox-builder://block-catalog",
+        "backing_source": "Shared exported catalog module or generated catalog manifest extracted from app.js definitions.",
+        "description": "Block IDs, categories, descriptions, kinds, typed inputs, defaults and Luau templates."
+      },
+      {
+        "uri": "roblox-builder://project-schema/v1",
+        "backing_source": "src/core/VisualBlockTree.js and src/core/VisualProjectFile.js",
+        "description": "Visual project tree shape and version 1 file metadata format."
+      }
+    ],
+    "initial_tools": [
+      {
+        "name": "list_block_catalog",
+        "mode": "read-only",
+        "input": {"category": "optional string", "kind": "optional COMMAND|VALUE|STRUCTURE|EXPRESSION", "query": "optional string"},
+        "result": "Matching normalized block definitions."
+      },
+      {
+        "name": "describe_block",
+        "mode": "read-only",
+        "input": {"block_type": "required catalog block id"},
+        "result": "Definition, typed inputs, connection rules and Luau template."
+      },
+      {
+        "name": "validate_project",
+        "mode": "pure computation",
+        "input": {"tree": "project tree node array"},
+        "result": "Validation status and structured diagnostics without changing editor state."
+      },
+      {
+        "name": "generate_luau",
+        "mode": "pure computation",
+        "input": {"tree": "project tree node array"},
+        "result": "Generated Luau and validation diagnostics."
+      },
+      {
+        "name": "decode_project_file",
+        "mode": "pure computation",
+        "input": {"source": "Luau text with project metadata marker"},
+        "result": "Luau source, project title and visual tree; explicit error if metadata is missing or invalid."
+      },
+      {
+        "name": "encode_project_file",
+        "mode": "pure computation",
+        "input": {"title": "optional string", "tree": "project tree node array"},
+        "result": "Luau project file text with versioned visual metadata."
+      }
+    ],
+    "not_in_scope_without_new_runtime": [
+      "Run or deploy scripts into Roblox Studio/cloud.",
+      "Read or mutate the browser editor's live state from a separate MCP process.",
+      "Persist projects remotely or authenticate users.",
+      "Execute arbitrary Luau supplied by a caller."
+    ],
+    "recommended_next_boundary": "Extract the app.js definitions, category metadata, labels and generation/validation logic behind a DOM-free shared module; keep UI rendering in app.js and import the shared module from both browser and MCP server."
+  },
+  "verification": {
+    "existing_test_suite": "npm test",
+    "current_mcp_coverage": "None; no MCP package, server entrypoint, transport or tool implementation exists."
+  }
+}

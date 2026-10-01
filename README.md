@@ -20,6 +20,8 @@ A biblioteca foi estruturada em fases, começando pela Fase 1:
 - gerador inicial de Luau
 - testes automatizados
 
+Para o mapa completo da interface, do fluxo de dados e da estrutura atual do repositorio, consulte [Documentação do site](docs/estrutura-do-site.md). O manifesto estruturado para planejar a integracao MCP esta em [docs/mcp-site-map.json](docs/mcp-site-map.json).
+
 ## Estrutura
 
 ```text
