@@ -69,6 +69,13 @@ test('React block and output components follow the input-aware component contrac
   assert.equal(typeof VisualBlockComponent, 'function');
 });
 
+test('Browser bundle path is relative for GitHub Pages project sites', () => {
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+
+  assert.match(html, /<script type="module" src="dist\/app\.js"><\/script>/);
+  assert.doesNotMatch(html, /src="\/dist\/app\.js"/);
+});
+
 test('Editing a literal inside a nested value block updates generated Luau', () => {
   const definitions = {
     assignment: { template: '{value}', props: {} },
