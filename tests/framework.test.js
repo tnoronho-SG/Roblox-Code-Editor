@@ -59,6 +59,8 @@ import { VisualConnectionSystem } from '../src/core/VisualConnectionSystem.js';
 import { VisualBlockTree } from '../src/core/VisualBlockTree.js';
 import { appendVisualProjectMetadata, normalizeVisualProjectTree, readVisualProjectMetadata } from '../src/core/VisualProjectFile.js';
 import { serializeLuauExpression } from '../src/core/LuauExpressionSerializer.js';
+import { ROBLOX_SERVICE_OPTIONS } from '../src/core/RobloxServiceOptions.js';
+import { getDefaultEnumState, ROBLOX_ENUM_OPTIONS } from '../src/core/RobloxEnumOptions.js';
 import { GeneratedCodeDisplay, InputBlock, InputFreeBlock, VisualBlockComponent } from '../src/ui/VisualBlockComponents.js';
 
 test('React block and output components follow the input-aware component contract', () => {
@@ -74,6 +76,158 @@ test('Browser bundle path is relative for GitHub Pages project sites', () => {
 
   assert.match(html, /<script type="module" src="dist\/app\.js"><\/script>/);
   assert.doesNotMatch(html, /src="\/dist\/app\.js"/);
+});
+
+test('GetService blocks expose the complete service dropdown and generate quoted Luau names', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const expectedServices = [
+    'AnalyticsService', 'AssetService', 'AvatarEditorService', 'BadgeService', 'CaptureService',
+    'ChangeHistoryService', 'Chat', 'CollectionService', 'ContentProvider', 'ContextActionService',
+    'ControllerService', 'CoreGui', 'DataStoreService', 'Debris', 'GeometryService', 'GroupService',
+    'GuiService', 'HapticService', 'HttpService', 'InsertService', 'KeyframeSequenceProvider',
+    'LocalizationService', 'LogService', 'MarketplaceService', 'MaterialService', 'MemoryStoreService',
+    'MessagingService', 'NetworkClient', 'NetworkServer', 'PathfindingService', 'PhysicsService',
+    'Players', 'PolicyService', 'ProximityPromptService', 'ReplicatedFirst', 'ReplicatedStorage',
+    'RunService', 'ServerScriptService', 'ServerStorage', 'SoundService', 'StarterGui', 'StarterPack',
+    'StarterPlayer', 'Stats', 'StudioService', 'Teams', 'TeleportService', 'TextChatService',
+    'TextService', 'TweenService', 'UserInputService', 'UserService', 'VRService', 'VoiceChatService',
+    'Workspace',
+  ];
+
+  assert.deepEqual(ROBLOX_SERVICE_OPTIONS, expectedServices);
+  ['game_get_service', 'services_get_service'].forEach((key) => {
+    const definition = source.split('\n').find(line => line.startsWith(`  ${key}:`));
+    assert.match(definition, /service:\['Service','service'\]/);
+  });
+  assert.match(source, /meta\[1\]==='service'/);
+
+  const definition = { get_service: { template: 'game:GetService({service})', props: { service: '"Players"' } } };
+  ROBLOX_SERVICE_OPTIONS.forEach((service) => {
+    const node = { type: 'get_service', properties: { service: JSON.stringify(service) } };
+    assert.equal(serializeLuauExpression(node, definition, String), `game:GetService("${service}")`);
+  });
+});
+
+test('GetService blocks connect to variable value sockets as object values', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const variableDefinition = normalizeVisualDefinition('set_variable', {
+    type: 'variables',
+    props: { value: '0' },
+    propsMeta: { value: ['Value', 'any', 'socket'] },
+  });
+  const variableInput = variableDefinition.inputs[0];
+
+  ['game_get_service', 'services_get_service'].forEach((key) => {
+    const definitionLine = source.split('\n').find(line => line.startsWith(`  ${key}:`));
+    assert.match(definitionLine, /kind:'VALUE',output:'OBJECT'/);
+    const serviceDefinition = normalizeVisualDefinition(key, {
+      type: key === 'game_get_service' ? 'objects' : 'services',
+      kind: 'VALUE',
+      output: 'OBJECT',
+    });
+
+    assert.equal(VisualConnectionSystem.canConnectValue(serviceDefinition, variableInput), true);
+  });
+});
+
+test('Enum block offers category-specific states and generates an Enum expression', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const enumDefinitionLine = source.split('\n').find(line => line.startsWith('  advanced_enum:'));
+  const categories = [
+    'KeyCode', 'UserInputType', 'UserInputState', 'HumanoidStateType', 'HumanoidRigType',
+    'Material', 'PartType', 'EasingStyle', 'EasingDirection', 'CameraType', 'AnimationPriority',
+    'RaycastFilterType', 'ExplosionType', 'TweenStatus', 'TextXAlignment', 'TextYAlignment',
+    'TextTruncate', 'FillDirection', 'SortOrder', 'HorizontalAlignment', 'VerticalAlignment',
+    'ZIndexBehavior', 'ScrollingDirection', 'SurfaceType', 'CollisionFidelity', 'ModelStreamingMode',
+    'PhysicsSteppingMethod', 'ActuatorRelativeTo', 'PositionAlignmentMode', 'OrientationAlignmentMode',
+    'PathStatus', 'FontSize', 'FontStyle', 'FormFactor', 'GearType', 'GamepadType', 'TeleportState',
+    'TeleportResult', 'ChatVersion', 'TextFilterContext', 'PreferredInput', 'Axis', 'AccessoryType',
+    'AvatarAssetType', 'HighlightDepthMode', 'HandlesStyle', 'HapticEffectType', 'InOutInfoType',
+    'InputType', 'InputActionType',
+  ];
+
+  assert.deepEqual(Object.keys(ROBLOX_ENUM_OPTIONS), categories);
+  assert.match(enumDefinitionLine, /\},false,\{kind:'VALUE',output:'ENUM'\}\)/);
+  assert.deepEqual(ROBLOX_ENUM_OPTIONS.UserInputState, ['Begin', 'Change', 'End', 'Cancel', 'None']);
+  assert.deepEqual(ROBLOX_ENUM_OPTIONS.HumanoidRigType, ['R6', 'R15']);
+  assert.deepEqual(ROBLOX_ENUM_OPTIONS.GearType, [
+    'Hat', 'Gear', 'MeleeWeapons', 'RangedWeapons', 'Explosives', 'PowerUps', 'NavigationEnhancers',
+    'MusicalInstruments', 'SocialItems', 'BuildingTools', 'Transport',
+  ]);
+  assert.ok(ROBLOX_ENUM_OPTIONS.AccessoryType.includes('Eyelash'));
+  assert.ok(ROBLOX_ENUM_OPTIONS.HapticEffectType.includes('GameplayCollision'));
+  assert.ok(ROBLOX_ENUM_OPTIONS.InputType.includes('Sin'));
+  assert.ok(ROBLOX_ENUM_OPTIONS.GamepadType.includes('Unknown'));
+  assert.equal(getDefaultEnumState('HumanoidRigType'), 'R6');
+  assert.equal(getDefaultEnumState('CameraType'), 'Fixed');
+  assert.equal(getDefaultEnumState('UnknownCategory'), '');
+  assert.match(source, /enumState.+ROBLOX_ENUM_OPTIONS\[node\?\.properties\?\.enumType\]/);
+  assert.match(source, /propertyId==='enumType'.+getDefaultEnumState\(value\)/);
+
+  const definition = {
+    advanced_enum: { template: 'Enum.{enumType}.{value}', props: { enumType: 'KeyCode', value: 'E' } },
+  };
+  assert.equal(
+    serializeLuauExpression({ type: 'advanced_enum', properties: { enumType: 'UserInputState', value: 'Begin' } }, definition, String),
+    'Enum.UserInputState.Begin',
+  );
+});
+
+test('BindAction accepts text, object, boolean, and Enum value blocks in matching sockets', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const bindActionLine = source.split('\n').find(line => line.startsWith('  context_action_bind_action:'));
+  const functionReferenceLine = source.split('\n').find(line => line.startsWith('  function_reference:'));
+
+  assert.match(bindActionLine, /actionName:\['Name','text','socket'\]/);
+  assert.match(bindActionLine, /functionName:\['Function','object','socket'\]/);
+  assert.match(bindActionLine, /touch:\['Touch','boolean','socket'\]/);
+  assert.match(bindActionLine, /keys:\['Keys','enum','socket'\]/);
+  assert.match(functionReferenceLine, /template:'\{functionName\}'.+kind:'VALUE',output:'FUNCTION'/);
+
+  const textValue = normalizeVisualDefinition('text_value', { kind: 'VALUE', output: 'TEXT' });
+  const callback = normalizeVisualDefinition('function_reference', { kind: 'VALUE', output: 'FUNCTION' });
+  const objectValue = normalizeVisualDefinition('object_reference', { kind: 'VALUE', output: 'OBJECT' });
+  const booleanValue = normalizeVisualDefinition('boolean_value', { kind: 'VALUE', output: 'BOOLEAN' });
+  const enumValue = normalizeVisualDefinition('advanced_enum', { kind: 'VALUE', output: 'ENUM' });
+  const nameInput = normalizeVisualDefinition('bind_action', {
+    propsMeta: { actionName: ['Name', 'text', 'socket'] },
+  }).inputs[0];
+  const callbackInput = normalizeVisualDefinition('bind_action', {
+    propsMeta: { functionName: ['Function', 'object', 'socket'] },
+  }).inputs[0];
+  const touchInput = normalizeVisualDefinition('bind_action', {
+    propsMeta: { touch: ['Touch', 'boolean', 'socket'] },
+  }).inputs[0];
+  const keysInput = normalizeVisualDefinition('bind_action', {
+    propsMeta: { keys: ['Keys', 'enum', 'socket'] },
+  }).inputs[0];
+
+  assert.equal(VisualConnectionSystem.canConnectValue(textValue, nameInput), true);
+  assert.equal(VisualConnectionSystem.canConnectValue(callback, callbackInput), true);
+  assert.equal(VisualConnectionSystem.canConnectValue(objectValue, callbackInput), true);
+  assert.equal(VisualConnectionSystem.canConnectValue(booleanValue, touchInput), true);
+  assert.equal(VisualConnectionSystem.canConnectValue(enumValue, keysInput), true);
+  assert.equal(VisualConnectionSystem.canConnectValue(enumValue, callbackInput), false);
+  assert.equal(VisualConnectionSystem.canConnectValue(callback, keysInput), false);
+  assert.equal(VisualConnectionSystem.canConnectValue(textValue, touchInput), false);
+
+  const definitions = {
+    function_reference: { template: '{functionName}' },
+    bind_action: { template: 'ContextActionService:BindAction({actionName}, {functionName}, {touch}, {keys})' },
+  };
+  assert.equal(serializeLuauExpression({
+    type: 'bind_action',
+    properties: { actionName: 'Jump', functionName: 'onAction', touch: 'false', keys: 'Enum.KeyCode.Space' },
+  }, definitions, String), 'ContextActionService:BindAction("Jump", onAction, false, Enum.KeyCode.Space)');
+});
+
+test('Holding Space pans the canvas unless a text or form editor is active', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+
+  assert.match(source, /function isEditingText\(target\).*target\.closest\('input,textarea,select/);
+  assert.match(source, /document\.addEventListener\('keydown',event=>\{if\(isSpaceKey\(event\)\)/);
+  assert.match(source, /document\.addEventListener\('keyup',event=>\{if\(!spacePanActive\|\|!isSpaceKey\(event\)\)return;spacePanActive=false;setHandMode\(false\)/);
+  assert.match(source, /window\.addEventListener\('blur',\(\)=>\{if\(!spacePanActive\)return;spacePanActive=false;setHandMode\(false\)\}/);
 });
 
 test('Editing a literal inside a nested value block updates generated Luau', () => {

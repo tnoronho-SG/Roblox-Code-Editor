@@ -14,6 +14,8 @@ export const VISUAL_TYPES = Object.freeze({
   POSITION: 'POSITION',
   COLOR: 'COLOR',
   SOUND: 'SOUND',
+  FUNCTION: 'FUNCTION',
+  ENUM: 'ENUM',
   ANY: 'ANY',
 });
 
@@ -105,6 +107,8 @@ function visualTypeForMeta(meta = [], inputId = '') {
   if (type === 'color') return VISUAL_TYPES.COLOR;
   if (type === 'position' || type === 'vector3' || type === 'cframe') return VISUAL_TYPES.POSITION;
   if (type === 'sound') return VISUAL_TYPES.SOUND;
+  if (type === 'function') return VISUAL_TYPES.FUNCTION;
+  if (type === 'enum') return VISUAL_TYPES.ENUM;
   if (type === 'player') return VISUAL_TYPES.PLAYER;
   if (type === 'object' || type === 'instance' || type === 'part' || type === 'model') return VISUAL_TYPES.OBJECT;
   if (type === 'text' || type === 'string') return VISUAL_TYPES.TEXT;

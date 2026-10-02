@@ -9,6 +9,7 @@ export function formatLuauValue(type, key, value, definitions, normalizeOperator
     value = definitions[type]?.props?.[key] ?? 'nil';
   }
   if (value && typeof value === 'object') return expressionCode(value);
+  if (type === 'advanced_enum' && (key === 'enumType' || key === 'value')) return String(value);
   if (key === 'object' && definitions[type]?.output === 'OBJECT') {
     return String(value).trim() || 'nil';
   }
@@ -17,7 +18,7 @@ export function formatLuauValue(type, key, value, definitions, normalizeOperator
 
   if (typeof value === 'string') {
     const raw = value.trim();
-    if (['name', 'variable', 'newName', 'function'].includes(key)) return raw || 'value';
+    if (['name', 'variable', 'newName', 'function', 'functionName'].includes(key)) return raw || 'value';
     if (!raw) return '""';
     if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) return raw;
     if (/^true$|^false$|^nil$/.test(raw) || /^-?\d+(?:\.\d+)?$/.test(raw) || /^[-+*/%<>=!~()\[\].]+$/.test(raw)) return raw;
