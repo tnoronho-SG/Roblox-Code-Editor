@@ -4,6 +4,7 @@ Este documento descreve a aplicacao Roblox Lua Builder: o que aparece no editor,
 
 - Site publicado: [Roblox Lua Builder](https://tnoronho-sg.github.io/Roblox-Code-Editor/)
 - Mapa estruturado para automacao: [mcp-site-map.json](mcp-site-map.json)
+- Especificacao MCP e arquitetura dos blocos: [mcp-arquitetura.md](mcp-arquitetura.md)
 - Entrada da pagina: [index.html](../index.html)
 - Controlador do editor: [app.js](../app.js)
 - Estilos: [styles.css](../styles.css)

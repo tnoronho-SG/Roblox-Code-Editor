@@ -207,6 +207,9 @@
       "package.json": "Express start/build scripts and React runtime dependencies; Node test script.",
       "README.md": "Framework overview, setup notes and current published editor link.",
       "package-lock.json": "Locked npm metadata.",
+      "docs/estrutura-do-site.md": "Human-readable site and framework documentation.",
+      "docs/mcp-arquitetura.md": "Detailed MCP integration specification and block architecture.",
+      "docs/mcp-site-map.json": "Machine-readable website and MCP architecture map.",
       "memes/": "Local audio assets used by the typing minigame."
     },
     "src/core/": {
@@ -283,6 +286,11 @@
         "uri": "roblox-builder://site-map",
         "backing_file": "docs/mcp-site-map.json",
         "description": "This site, source tree, feature and integration map."
+      },
+      {
+        "uri": "roblox-builder://architecture",
+        "backing_file": "docs/mcp-arquitetura.md",
+        "description": "MCP integration specification, block contracts, project model, safety boundaries and implementation plan."
       },
       {
         "uri": "roblox-builder://block-catalog",

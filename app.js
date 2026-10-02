@@ -63,7 +63,7 @@ const definitions={
   when_sound_finished:{type:'events',label:'When sound finishes',icon:'⚡',template:'sound.Ended:Connect(function()',props:{sound:'sound'},propsMeta:{sound:['Sound','text']},children:true},
   when_remote_event_received:{type:'events',label:'When remote event is received',icon:'⚡',template:'remoteEvent.OnClientEvent:Connect(function(...)',props:{remoteEvent:'remoteEvent'},propsMeta:{remoteEvent:['Remote event','text']},children:true},
   when_variable_changed:{type:'events',label:'When variable changes',icon:'⚡',template:'while true do',props:{variable:'score'},propsMeta:{variable:['Variable','text']},children:true},
-  every_second:{type:'events',label:'Every second',icon:'⏱',template:'while true do',props:{seconds:'1'},propsMeta:{seconds:['Seconds','number']},children:true},
+  every_second:{type:'events',label:'Forever',icon:'↻',template:'while true do',children:true},
   every_frame:{type:'events',label:'Every frame',icon:'▣',template:'RunService.RenderStepped:Connect(function(deltaTime)',children:true},
   when_heartbeat:{type:'events',label:'When Heartbeat',icon:'⚡',template:'RunService.Heartbeat:Connect(function(deltaTime)',children:true},
   when_stepped:{type:'events',label:'When Stepped',icon:'⚡',template:'RunService.Stepped:Connect(function(time, deltaTime)',children:true},
@@ -75,11 +75,11 @@ const definitions={
   when_mouse_enter:{type:'events',label:'When MouseEnter',icon:'⚡',template:'button.MouseEnter:Connect(function(player)',props:{button:'button'},propsMeta:{button:['Button','text']},children:true},
   when_mouse_leave:{type:'events',label:'When MouseLeave',icon:'⚡',template:'button.MouseLeave:Connect(function(player)',props:{button:'button'},propsMeta:{button:['Button','text']},children:true},
   wait:{type:'control',label:'Wait',icon:'◷',template:'task.wait({seconds})',props:{seconds:'1'},propsMeta:{seconds:['Seconds','number']}},
-  if_block:{type:'control',label:'If',icon:'◇',template:'if {left} {operator} {right} then',props:{left:'',operator:'>',right:''},propsMeta:{left:['Left','text','socket'],operator:['Operator','operator'],right:['Right','text','socket']},children:true},
-  if_else_block:{type:'control',label:'If / Else',icon:'◇',template:'if {left} {operator} {right} then',props:{left:'',operator:'>',right:''},propsMeta:{left:['Left','text','socket'],operator:['Operator','operator'],right:['Right','text','socket']},children:true},
-  else_if_block:{type:'control',label:'Else if',icon:'◇',template:'elseif {left} {operator} {right} then',props:{left:'',operator:'>',right:''},propsMeta:{left:['Left','text','socket'],operator:['Operator','operator'],right:['Right','text','socket']},children:true},
+  if_block:{type:'control',label:'If',icon:'◇',template:'if {left} {operator} {right} then',props:{left:'',operator:'>',right:''},propsMeta:{left:['Left','any','socket'],operator:['Operator','operator'],right:['Right','any','socket']},children:true},
+  if_else_block:{type:'control',label:'If / Else',icon:'◇',template:'if {left} {operator} {right} then',props:{left:'',operator:'>',right:''},propsMeta:{left:['Left','any','socket'],operator:['Operator','operator'],right:['Right','any','socket']},children:true},
+  else_if_block:{type:'control',label:'Else if',icon:'◇',template:'elseif {left} {operator} {right} then',props:{left:'',operator:'>',right:''},propsMeta:{left:['Left','any','socket'],operator:['Operator','operator'],right:['Right','any','socket']},children:true},
   else_block:{type:'control',label:'Else',icon:'◇',template:'else',children:true},
-  while_block:{type:'control',label:'While',icon:'↻',template:'while {left} {operator} {right} do',props:{left:'',operator:'>',right:''},propsMeta:{left:['Left','text','socket'],operator:['Operator','operator'],right:['Right','text','socket']},children:true},
+  while_block:{type:'control',label:'While',icon:'↻',template:'while {left} {operator} {right} do',props:{left:'',operator:'>',right:''},propsMeta:{left:['Left','any','socket'],operator:['Operator','operator'],right:['Right','any','socket']},children:true},
   repeat_block:{type:'control',label:'Repeat',icon:'↻',template:'for _ = 1, {times} do',props:{times:'3'},propsMeta:{times:['Times','number','socket']},children:true},
   for_block:{type:'control',label:'For',icon:'↻',template:'for {variable} = {start}, {finish} do',props:{variable:'i',start:'1',finish:'10'},propsMeta:{variable:['Variable','text'],start:['Start','number','socket'],finish:['Finish','number','socket']},children:true},
   for_each_block:{type:'control',label:'For each',icon:'↻',template:'for {value} in pairs({table}) do',props:{value:'value',table:'items'},propsMeta:{value:['Value','text'],table:['Table','text','socket']},children:true},
@@ -114,9 +114,10 @@ const definitions={
   compound_variable:{type:'variables',label:'Change variable',icon:'◆',template:'{name} {operator}= {value}',props:{name:'coins',operator:'+',value:'1'},operatorOptions:['+','-','*','/','..'],propsMeta:{name:['Variable','text'],operator:['Operator','operator'],value:['Value','text']}},
   create_variable:{type:'variables',label:'Create variable',icon:'◆',template:'local {name} = nil',props:{name:'coins'},propsMeta:{name:['Name','text']}},
   delete_variable:{type:'variables',label:'Delete variable',icon:'◆',template:'{name} = nil',props:{name:'coins'},propsMeta:{name:['Name','text']}},
-  use_variable:{type:'variables',label:'Use variable',icon:'◆',template:'{name}',props:{name:'coins'},propsMeta:{name:['Variable','text']}},
+  use_variable:{type:'variables',label:'Use variable',icon:'◆',template:'{name}',props:{name:'coins'},propsMeta:{name:['Variable','text']},kind:'VALUE',output:'ANY'},
   show_variable:{type:'variables',label:'Show variable',icon:'◆',template:'print({name})',props:{name:'coins'},propsMeta:{name:['Variable','text']}},
   print_block:{type:'debug',label:'Print',icon:'⌕',template:'print({value})',props:{value:'"Test message"'},propsMeta:{value:['Value','text','socket']}},
+  comment_block:{type:'debug',label:'Comment',icon:'💬',template:'-- {comment}',props:{comment:'Add a note'},propsMeta:{comment:['Comment','text']},children:true},
   define_variable:{type:'variables',label:'Define variable',icon:'◆',template:'{name} = {value}',props:{name:'coins',value:'0'},propsMeta:{name:['Variable','text'],value:['Value','text']}},
   change_variable:{type:'variables',label:'Change variable by',icon:'◆',template:'{name} += {value}',props:{name:'coins',value:'1'},propsMeta:{name:['Variable','text'],value:['Value','number','socket']}},
   rename_variable:{type:'variables',label:'Rename variable',icon:'◆',template:'local {newName} = {name}\n{name} = nil',props:{name:'coins',newName:'points'},propsMeta:{name:['Name','text'],newName:['New name','text']}},
@@ -705,7 +706,7 @@ const englishLabels={
   when_sound_finished:'when sound finishes',
   when_remote_event_received:'when remote event is received',
   when_variable_changed:'when variable changes',
-  every_second:'every second',
+  every_second:'forever',
   every_frame:'every frame',
   wait:'wait',
   if_block:'if',
@@ -750,6 +751,7 @@ const englishLabels={
   use_variable:'use variable',
   show_variable:'show variable',
   print_block:'print',
+  comment_block:'comment',
   define_variable:'define variable',
   change_variable:'change variable by',
   rename_variable:'rename variable',
@@ -842,7 +844,7 @@ const portugueseLabels={
   when_sound_finished:'quando som terminar',
   when_remote_event_received:'quando evento remoto for recebido',
   when_variable_changed:'quando variável mudar',
-  every_second:'a cada segundo',
+  every_second:'para sempre',
   every_frame:'a cada frame',
   wait:'esperar',
   if_block:'se',
@@ -887,6 +889,7 @@ const portugueseLabels={
   use_variable:'usar variável',
   show_variable:'mostrar variável',
   print_block:'imprimir',
+  comment_block:'comentário',
   define_variable:'definir variável',
   change_variable:'alterar variável por',
   rename_variable:'renomear variável',
@@ -984,16 +987,97 @@ const portugueseCategories={
   services:'Serviços Roblox',
   advanced:'Avançado / Luau'
 };
-let state={tree:[],selected:null,category:'events',zoom:100,grid:true,history:[],future:[],language:'en',inlineCode:true,theme:'light',generatedCode:''};
+let state={tree:[],selected:null,category:'events',zoom:100,grid:true,history:[],future:[],language:'en',inlineCode:true,theme:'light',generatedCode:'',collapsedBlocks:new Set()};
 const $=id=>document.getElementById(id); const clone=o=>JSON.parse(JSON.stringify(o));
 const blockRoot=createRoot($('treeRoot'));
 const codeRoot=createRoot($('codeOutput'));
 function renderBlockInput(node,key){const definition=definitions[node.type],meta=definition.propsMeta[key],value=node.properties[key],onChange=event=>updateBlockInput(node.id,key,event.target.value);if(meta[2]==='socket')return React.createElement('div',{key,className:`socket ${value&&typeof value==='object'?'socket-filled':''}`,'data-socket':node.id,'data-prop':key},value&&typeof value==='object'?renderVisualNode(value,true):String(value==null||value===''?meta[0]:value));if(meta[1]==='operator'||meta[1]==='type'||meta[1]==='boolean'){const options=meta[1]==='boolean'?['true','false']:meta[1]==='type'?['Número','Texto','Boolean']:(definition.operatorOptions||['=', '==', '>', '<', '>=', '<=', '!=', '~=']);return React.createElement('select',{key,'data-prop':key,value:value??'',onChange},options.map(option=>React.createElement('option',{key:option,value:option},option)))}return React.createElement('input',{key,type:meta[1]==='number'?'number':'text',step:meta[1]==='number'?'any':undefined,'data-prop':key,value:value??'','aria-label':meta[0],onChange})}
 function updateBlockInput(nodeId,propertyId,value){if(VisualBlockTree.setProperty(state.tree,nodeId,propertyId,value))renderTree()}
 function renderVisualNode(node,expression=false){const definition=definitions[node.type];return React.createElement(VisualBlockComponent,{key:`${node.id}-${expression?'expression':'block'}`,hasInputs:Object.keys(definition.propsMeta||{}).length>0,node,expression,renderBlock:props=>renderVisualNodeContent({...props,renderBlock:renderVisualNode})})}
-function renderVisualNodeContent({node,expression,renderBlock}){const definition=definitions[node.type],visual=visualDefinitions[node.type],color=categories[definition.type].color,keys=Object.keys(definition.propsMeta||{}),label=labelFor(node.type),placeholder=/\[(?:objeto|object|target)\]/i,objectInputKey=keys.find(key=>definition.propsMeta[key][2]==='socket'&&(['object','target'].includes(key.toLowerCase())||['object','target'].includes(String(definition.propsMeta[key][0]).toLowerCase()))),placeholderMatch=objectInputKey&&label.match(placeholder);let labelContent=label;if(placeholderMatch)labelContent=React.createElement(React.Fragment,null,label.slice(0,placeholderMatch.index),renderBlockInput(node,objectInputKey),label.slice(placeholderMatch.index+placeholderMatch[0].length));const inputs=keys.filter(key=>!(placeholderMatch&&key===objectInputKey)).map(key=>renderBlockInput(node,key));const block=React.createElement('div',{className:`block category-${definition.type} block-kind-${visual.kind.toLowerCase()} ${definition.type==='event'?'event':''} ${expression?'expression-block':''} ${state.selected===node.id?'selected':''}`,style:{background:color},draggable:true},React.createElement('span',{className:'block-icon'},definition.icon),React.createElement('div',{className:'block-label'},labelContent),...inputs,React.createElement('button',{className:'delete-mini','data-delete':node.id,title:'Excluir'},'×'));const children=definition.children?React.createElement('div',{className:'nested','data-parent':node.id},(node.children||[]).map(child=>renderBlock(child))):null;const inlineCode=!expression&&state.inlineCode?React.createElement('code',{className:'inline-code'},expressionCode(node)):null;return React.createElement(React.Fragment,null,React.createElement('div',{className:`block-wrap ${expression?'expression-wrap':''} ${state.selected===node.id?'selected':''} ${validate().some(error=>error.id===node.id)?'has-error':''}`,'data-id':node.id,'data-kind':visual.kind},block,children,inlineCode),node.next?renderBlock(node.next):null)}
+function renderVisualNodeContent({ node, expression, renderBlock }) {
+  const definition = definitions[node.type];
+  const visual = visualDefinitions[node.type];
+  const color = categories[definition.type].color;
+  const keys = Object.keys(definition.propsMeta || {});
+  const label = labelFor(node.type);
+  const placeholder = /\[(?:objeto|object|target)\]/i;
+  const objectInputKey = keys.find(key => definition.propsMeta[key][2] === 'socket'
+    && (['object', 'target'].includes(key.toLowerCase())
+      || ['object', 'target'].includes(String(definition.propsMeta[key][0]).toLowerCase())));
+  const placeholderMatch = objectInputKey && label.match(placeholder);
+  const isCommentBlock = node.type === 'comment_block';
+  const isCollapsed = isCommentBlock && state.collapsedBlocks.has(node.id);
+  const collapseTitle = state.language === 'pt'
+    ? (isCollapsed ? 'Expandir blocos internos' : 'Recolher blocos internos')
+    : (isCollapsed ? 'Expand inner blocks' : 'Collapse inner blocks');
+  let labelContent = label;
+
+  if (placeholderMatch) {
+    labelContent = React.createElement(
+      React.Fragment,
+      null,
+      label.slice(0, placeholderMatch.index),
+      renderBlockInput(node, objectInputKey),
+      label.slice(placeholderMatch.index + placeholderMatch[0].length),
+    );
+  }
+
+  const inputs = keys
+    .filter(key => !(placeholderMatch && key === objectInputKey))
+    .map(key => renderBlockInput(node, key));
+  const collapseButton = isCommentBlock
+    ? React.createElement('button', {
+      type: 'button',
+      className: 'collapse-toggle',
+      title: collapseTitle,
+      'aria-label': collapseTitle,
+      'aria-expanded': !isCollapsed,
+      onClick: event => {
+        event.stopPropagation();
+        if (isCollapsed) state.collapsedBlocks.delete(node.id);
+        else state.collapsedBlocks.add(node.id);
+        renderTree();
+      },
+    }, isCollapsed ? '▸' : '▾')
+    : null;
+  const block = React.createElement(
+    'div',
+    {
+      className: `block category-${definition.type} block-kind-${visual.kind.toLowerCase()} ${definition.type === 'event' ? 'event' : ''} ${isCommentBlock ? 'comment-container' : ''} ${expression ? 'expression-block' : ''} ${state.selected === node.id ? 'selected' : ''}`,
+      style: { background: color },
+      draggable: true,
+    },
+    React.createElement('span', { className: 'block-icon' }, definition.icon),
+    collapseButton,
+    React.createElement('div', { className: 'block-label' }, labelContent),
+    ...inputs,
+    React.createElement('button', { className: 'delete-mini', 'data-delete': node.id, title: 'Excluir' }, '×'),
+  );
+  const children = definition.children
+    ? React.createElement('div', {
+      className: 'nested',
+      'data-parent': node.id,
+      style: isCollapsed ? { display: 'none' } : undefined,
+    }, (node.children || []).map(child => renderBlock(child)))
+    : null;
+  const inlineCode = !expression && state.inlineCode
+    ? React.createElement('code', { className: 'inline-code' }, expressionCode(node))
+    : null;
+
+  return React.createElement(
+    React.Fragment,
+    null,
+    React.createElement('div', {
+      className: `block-wrap ${expression ? 'expression-wrap' : ''} ${state.selected === node.id ? 'selected' : ''} ${validate().some(error => error.id === node.id) ? 'has-error' : ''}`,
+      'data-id': node.id,
+      'data-kind': visual.kind,
+    }, block, children, inlineCode),
+    node.next ? renderBlock(node.next) : null,
+  );
+}
 class VisualTreeCanvas extends React.Component{componentDidMount(){this.props.onCommit()}componentDidUpdate(){this.props.onCommit()}render(){return this.props.tree.map(node=>renderVisualNode(node))}}
-function renderReactTree(){const count=countNodes(state.tree);$('dropHint').style.display=count?'none':'flex';$('blockCount').textContent=`${count} bloco${count===1?'':'s'}`;blockRoot.render(React.createElement(VisualTreeCanvas,{tree:state.tree,onCommit:()=>{bindTree();document.querySelectorAll('#canvas [data-prop]').forEach(input=>{input.oninput=null});updateCode()}}))}
+function renderReactTree(){const count=countNodes(state.tree);$('dropHint').style.display=count?'none':'flex';$('blockCount').textContent=`${count} bloco${count===1?'':'s'}`;blockRoot.render(React.createElement(VisualTreeCanvas,{tree:state.tree,onCommit:()=>{fitNestedBlockWidths();bindTree();document.querySelectorAll('#canvas [data-prop]').forEach(input=>{input.oninput=null});updateCode()}}))}
+function fitNestedBlockWidths(){const wrappers=[...$('treeRoot').querySelectorAll('.block-wrap')],scale=state.zoom/100,depthOf=wrapper=>{let depth=0,parent=wrapper.parentElement;while(parent){if(parent.classList.contains('block-wrap'))depth++;parent=parent.parentElement}return depth};wrappers.forEach(wrapper=>{const block=[...wrapper.children].find(child=>child.classList.contains('block'));if(block)block.style.width=''});wrappers.sort((left,right)=>depthOf(right)-depthOf(left));wrappers.forEach(wrapper=>{const block=[...wrapper.children].find(child=>child.classList.contains('block'));if(!block)return;const blockRect=block.getBoundingClientRect();let requiredWidth=blockRect.width/scale;wrapper.querySelectorAll('.block-wrap').forEach(descendant=>{const descendantBlock=[...descendant.children].find(child=>child.classList.contains('block'));if(!descendantBlock)return;requiredWidth=Math.max(requiredWidth,(descendantBlock.getBoundingClientRect().right-blockRect.left)/scale+16)});if(requiredWidth>blockRect.width/scale+1)block.style.width=`${Math.ceil(requiredWidth)}px`})}
 function labelFor(key){return state.language==='pt'?(portugueseLabels[key]||definitions[key]?.label||key):(englishLabels[key]||definitions[key]?.label||key)}
 function categoryLabel(key){return state.language==='pt'?(portugueseCategories[key]||categories[key].label):categories[key].label}
 function snapshot(){state.history.push(clone(state.tree));if(state.history.length>30)state.history.shift();state.future=[]}
@@ -1247,7 +1331,66 @@ function inspectorSummaryForChildren(node){const category=definitions[node.type]
 inspectorSummary=inspectorSummaryForChildren;
 function escapeHtml(value){return String(value).replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[x]))}
 function validate(){const errors=[];const vars=new Set();function walk(list){list.forEach(n=>{const d=definitions[n.type];Object.entries(n.properties||{}).forEach(([k,v])=>{if(typeof v!=='object'&&!String(v).trim())errors.push({id:n.id,msg:`${labelFor(n.type)}: ${d.propsMeta?.[k]?.[0]||k} ${state.language==='pt'?'vazio':'is empty'}`})});if(['set_variable'].includes(n.type))vars.add(n.properties.name);walk(n.children||[])})}walk(state.tree);function second(list){list.forEach(n=>{if(['set_variable'].includes(n.type)&&!vars.has(n.properties.name))errors.push({id:n.id,msg:`${dLabel(n)}: ${state.language==='pt'?'variável':'variable'} "${n.properties.name||'?'}" ${state.language==='pt'?'não existe':'does not exist'}`});if(['if_block','if_else_block','else_if_block','while_block','repeat_until_block','wait_until_block'].includes(n.type)){const left=String(n.properties.left ?? n.properties.condition ?? '').trim();const op=String(n.properties.operator ?? '').trim();const right=String(n.properties.right ?? '').trim();const hasStructuredCondition=(left && op && right) || (String(n.properties.condition ?? '').trim() !== '');if(!hasStructuredCondition){errors.push({id:n.id,msg:state.language==='pt'?'Condição incompleta':'Incomplete condition'})}};if(n.children&&(['if_block','if_else_block','else_if_block','while_block','repeat_until_block','player_joined'].includes(n.type))&&n.children.length===0)errors.push({id:n.id,msg:`${dLabel(n)} ${state.language==='pt'?'precisa de blocos internos':'needs inner blocks'}`});second(n.children||[])})}second(state.tree);return errors}function dLabel(n){return labelFor(n.type)}
-function generate(){const errors=validate();const grouped=new Map(errors.map(e=>[e.id,e]));document.querySelectorAll('.block-wrap').forEach(e=>e.classList.toggle('has-error',grouped.has(e.dataset.id)));$('errorsPanel').innerHTML=errors.length?`<div class="error-heading" style="color:#d86666"><span style="background:#ffe3e3">!</span><strong>${errors.length} erro${errors.length>1?'s':''} encontrado${errors.length>1?'s':''}</strong></div>${errors.slice(0,3).map(e=>`<div class="error-item"><span>!</span>${e.msg}</div>`).join('')}`:'<div class="error-heading"><span>✓</span><strong>Sem erros de validação</strong></div>';$('validState').innerHTML=errors.length?'<i style="background:#e66c6c"></i> '+errors.length+' erro(s)':'<i></i> válido';const lines=[];function emitList(list,depth=0){list.forEach(node=>emitNode(node,depth))}function emitNode(node,depth=0){const d=definitions[node.type];let line=d.template;Object.entries(node.properties||{}).forEach(([k,v])=>line=line.replaceAll(`{${k}}`,formatValue(node.type,k,v)));if(node.type==='else_block'){lines.push('  '.repeat(depth)+'else');emitList(node.children||[],depth+1);return}if(node.type==='player_joined'){lines.push('  '.repeat(depth)+line);if(d.children)emitList(node.children||[],depth+1);lines.push('  '.repeat(depth)+'end)');return}lines.push('  '.repeat(depth)+line);if(d.children){emitList(node.children||[],depth+1);if(node.type==='repeat_until_block'){lines.push('  '.repeat(depth)+`until ${formatValue(node.type,'left',node.properties.left)} ${normalizeOperator(node.properties.operator)} ${formatValue(node.type,'right',node.properties.right)}`)}else if(node.type==='try_block'){lines.push('  '.repeat(depth)+'end)')}else if(node.type!=='else_block'){lines.push('  '.repeat(depth)+'end')}}}emitList(state.tree);const generated=lines.join('\n')||'-- Arraste blocos para gerar código Luau';state.generatedCode=generated;return generated}
+function generate() {
+  const errors = validate();
+  const grouped = new Map(errors.map(error => [error.id, error]));
+  document.querySelectorAll('.block-wrap').forEach(element => element.classList.toggle('has-error', grouped.has(element.dataset.id)));
+  $('errorsPanel').innerHTML = errors.length
+    ? `<div class="error-heading" style="color:#d86666"><span style="background:#ffe3e3">!</span><strong>${errors.length} erro${errors.length > 1 ? 's' : ''} encontrado${errors.length > 1 ? 's' : ''}</strong></div>${errors.slice(0, 3).map(error => `<div class="error-item"><span>!</span>${error.msg}</div>`).join('')}`
+    : '<div class="error-heading"><span>✓</span><strong>Sem erros de validação</strong></div>';
+  $('validState').innerHTML = errors.length
+    ? '<i style="background:#e66c6c"></i> ' + errors.length + ' erro(s)'
+    : '<i></i> válido';
+
+  const lines = [];
+  function emitList(list, depth = 0) {
+    list.forEach(node => emitNode(node, depth));
+  }
+  function emitNode(node, depth = 0) {
+    const definition = definitions[node.type];
+    let line = definition.template;
+    Object.entries(node.properties || {}).forEach(([key, value]) => {
+      line = line.replaceAll(`{${key}}`, formatValue(node.type, key, value));
+    });
+
+    if (node.type === 'comment_block') {
+      const indentation = '  '.repeat(depth);
+      String(node.properties.comment ?? '').split(/\r?\n/).forEach(text => {
+        lines.push(`${indentation}-- ${text}`);
+      });
+      emitList(node.children || [], depth);
+      return;
+    }
+    if (node.type === 'else_block') {
+      lines.push('  '.repeat(depth) + 'else');
+      emitList(node.children || [], depth + 1);
+      return;
+    }
+    if (node.type === 'player_joined') {
+      lines.push('  '.repeat(depth) + line);
+      if (definition.children) emitList(node.children || [], depth + 1);
+      lines.push('  '.repeat(depth) + 'end)');
+      return;
+    }
+
+    lines.push('  '.repeat(depth) + line);
+    if (definition.children) {
+      emitList(node.children || [], depth + 1);
+      if (node.type === 'repeat_until_block') {
+        lines.push('  '.repeat(depth) + `until ${formatValue(node.type, 'left', node.properties.left)} ${normalizeOperator(node.properties.operator)} ${formatValue(node.type, 'right', node.properties.right)}`);
+      } else if (node.type === 'try_block') {
+        lines.push('  '.repeat(depth) + 'end)');
+      } else if (node.type !== 'else_block') {
+        lines.push('  '.repeat(depth) + 'end');
+      }
+    }
+  }
+
+  emitList(state.tree);
+  const generated = lines.join('\n') || '-- Arraste blocos para gerar código Luau';
+  state.generatedCode = generated;
+  return generated;
+}
 function normalizeOperator(value){if(value===undefined||value===null) return '';const normalized=String(value).trim();if(normalized==='=') return '==';if(normalized==='==') return '==';if(normalized==='~=') return '~=';if(normalized==='≠') return '~=';return normalized}
 function formatValue(type,key,value){return formatLuauValue(type,key,value,definitions,normalizeOperator,expressionCode)}
 function expressionCode(node){return serializeLuauExpression(node,definitions,normalizeOperator)}

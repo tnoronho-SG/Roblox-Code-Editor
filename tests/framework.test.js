@@ -224,6 +224,45 @@ test('Debug category provides a Print command with a value socket', () => {
   assert.equal(printBlock.inputs[0].id, 'value');
 });
 
+test('Debug comment block is a collapsible structure that preserves child code', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const definition = source.split('\n').find(line => line.startsWith('  comment_block:'));
+  const commentBlock = normalizeVisualDefinition('comment_block', {
+    type: 'debug',
+    propsMeta: { comment: ['Comment', 'text'] },
+    children: true,
+  });
+
+  assert.ok(definition);
+  assert.match(definition, /template:'-- \{comment\}'/);
+  assert.match(definition, /children:true/);
+  assert.equal(commentBlock.kind, 'STRUCTURE');
+  assert.equal(commentBlock.inputs[0].id, 'comment');
+  assert.match(source, /aria-expanded/);
+  assert.match(source, /node\.type === 'comment_block'/);
+  assert.match(source, /emitList\(node\.children \|\| \[\], depth\)/);
+});
+
+test('Forever event block has no inputs and keeps its legacy project id', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const definition = source.split('\n').find(line => line.startsWith('  every_second:'));
+  const foreverBlock = normalizeVisualDefinition('every_second', {
+    type: 'events',
+    label: 'Forever',
+    children: true,
+  });
+
+  assert.ok(definition);
+  assert.match(definition, /label:'Forever'/);
+  assert.match(definition, /template:'while true do'/);
+  assert.match(definition, /children:true/);
+  assert.doesNotMatch(definition, /props:|propsMeta:/);
+  assert.match(source, /every_second:'forever'/);
+  assert.match(source, /every_second:'para sempre'/);
+  assert.equal(foreverBlock.kind, 'STRUCTURE');
+  assert.deepEqual(foreverBlock.inputs, []);
+});
+
 test('Edited text and number literal values serialize into connected code', () => {
   const definitions = {
     set_variable: { template: '{name} = {value}', props: { name: 'coins', value: '0' } },
@@ -775,6 +814,51 @@ test('Visual type and connection systems enforce compatible inputs', () => {
   assert.equal(VisualConnectionSystem.canConnectValue(numberExpression, literalOnlyCommand.inputs[0]), false);
   assert.equal(VisualConnectionSystem.canConnectSequence(numberCommand, numberCommand), true);
   assert.equal(VisualConnectionSystem.canConnectBody(numberCommand, { accepts: VISUAL_BLOCK_KINDS.COMMAND }), true);
+});
+
+test('If, If/Else, Else if and While accept literal and object value blocks', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const conditionTypes = ['if_block', 'if_else_block', 'else_if_block', 'while_block'];
+  const variableDefinition = source.split('\n').find(line => line.startsWith('  use_variable:'));
+  const variableValue = normalizeVisualDefinition('use_variable', {
+    type: 'variables',
+    kind: 'VALUE',
+    output: VISUAL_TYPES.ANY,
+  });
+  const valueBlocks = [
+    normalizeVisualDefinition('text_value', { type: 'variables', kind: 'VALUE', output: VISUAL_TYPES.TEXT }),
+    normalizeVisualDefinition('number_value', { type: 'variables', kind: 'VALUE', output: VISUAL_TYPES.NUMBER }),
+    normalizeVisualDefinition('boolean_value', { type: 'variables', kind: 'VALUE', output: VISUAL_TYPES.BOOLEAN }),
+    normalizeVisualDefinition('object_reference', { type: 'objects', kind: 'VALUE', output: VISUAL_TYPES.OBJECT }),
+    variableValue,
+  ];
+
+  assert.ok(variableDefinition);
+  assert.match(variableDefinition, /kind:'VALUE',output:'ANY'/);
+
+  conditionTypes.forEach(type => {
+    const line = source.split('\n').find(entry => entry.startsWith(`  ${type}:`));
+    assert.ok(line, `Missing ${type} definition`);
+    assert.match(line, /left:\['Left','any','socket'\]/);
+    assert.match(line, /right:\['Right','any','socket'\]/);
+
+    const condition = normalizeVisualDefinition(type, {
+      type: 'control',
+      propsMeta: {
+        left: ['Left', 'any', 'socket'],
+        operator: ['Operator', 'operator'],
+        right: ['Right', 'any', 'socket'],
+      },
+      children: true,
+    });
+
+    ['left', 'right'].forEach(inputId => {
+      const input = condition.inputs.find(item => item.id === inputId);
+      valueBlocks.forEach(valueBlock => {
+        assert.equal(VisualConnectionSystem.canConnectValue(valueBlock, input), true, `${type}.${inputId} rejects ${valueBlock.output}`);
+      });
+    });
+  });
 });
 
 test('Visual block tree represents sequence, value and nested body connections', () => {
