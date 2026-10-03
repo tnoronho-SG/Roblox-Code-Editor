@@ -60,6 +60,7 @@ import { VisualBlockTree } from '../src/core/VisualBlockTree.js';
 import { appendVisualProjectMetadata, normalizeVisualProjectTree, readVisualProjectMetadata } from '../src/core/VisualProjectFile.js';
 import { serializeLuauExpression } from '../src/core/LuauExpressionSerializer.js';
 import { ROBLOX_SERVICE_OPTIONS } from '../src/core/RobloxServiceOptions.js';
+import { ROBLOX_INSTANCE_CLASS_OPTIONS } from '../src/core/RobloxInstanceClassOptions.js';
 import { getDefaultEnumState, ROBLOX_ENUM_OPTIONS } from '../src/core/RobloxEnumOptions.js';
 import { GeneratedCodeDisplay, InputBlock, InputFreeBlock, VisualBlockComponent } from '../src/ui/VisualBlockComponents.js';
 
@@ -105,6 +106,25 @@ test('GetService blocks expose the complete service dropdown and generate quoted
   ROBLOX_SERVICE_OPTIONS.forEach((service) => {
     const node = { type: 'get_service', properties: { service: JSON.stringify(service) } };
     assert.equal(serializeLuauExpression(node, definition, String), `game:GetService("${service}")`);
+  });
+});
+
+test('Instance.new exposes class dropdown options and generates quoted Luau names', () => {
+  const source = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const definitionLine = source.split('\n').find(line => line.startsWith('  instance_new:'));
+
+  assert.match(definitionLine, /className:\['Class name','instanceClass'\]/);
+  assert.match(source, /meta\[1\]==='instanceClass'/);
+  assert.deepEqual(ROBLOX_INSTANCE_CLASS_OPTIONS.slice(0, 5), [
+    'Accessory', 'AccessoryDescription', 'Accoutrement', 'Actor', 'AdGui',
+  ]);
+  assert.equal(ROBLOX_INSTANCE_CLASS_OPTIONS.at(-1), 'Zone');
+  assert.equal(new Set(ROBLOX_INSTANCE_CLASS_OPTIONS).size, ROBLOX_INSTANCE_CLASS_OPTIONS.length);
+
+  const definition = { instance_new: { template: 'Instance.new({className})', props: { className: '"Part"' } } };
+  ROBLOX_INSTANCE_CLASS_OPTIONS.forEach((className) => {
+    const node = { type: 'instance_new', properties: { className: JSON.stringify(className) } };
+    assert.equal(serializeLuauExpression(node, definition, String), `Instance.new("${className}")`);
   });
 });
 
